@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>WatchFolio — Search</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -45,6 +46,7 @@
       font-size: 28px;
       letter-spacing: 2px;
       color: var(--text);
+      text-decoration: none;
     }
 
     .logo span { color: var(--accent); }
@@ -65,6 +67,7 @@
     }
 
     .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--text); }
 
     .nav-right {
       display: flex;
@@ -157,7 +160,6 @@
     }
 
     .search-wrap input::placeholder { color: var(--muted); }
-
     .search-wrap input:focus { border-color: var(--accent); }
 
     .search-wrap button {
@@ -329,9 +331,7 @@
       gap: 3px;
     }
 
-    .card-info {
-      padding: 12px;
-    }
+    .card-info { padding: 12px; }
 
     .card-title {
       font-size: 13px;
@@ -343,10 +343,7 @@
       text-overflow: ellipsis;
     }
 
-    .card-meta {
-      font-size: 11px;
-      color: var(--muted);
-    }
+    .card-meta { font-size: 11px; color: var(--muted); }
 
     .card-actions {
       display: flex;
@@ -373,6 +370,16 @@
       background: rgba(230,57,70,0.12);
       border-color: rgba(230,57,70,0.3);
       color: var(--accent);
+    }
+
+    .card-btn.primary:hover {
+      background: rgba(230,57,70,0.2);
+    }
+
+    .card-btn.added {
+      background: rgba(40,200,120,0.12);
+      border-color: rgba(40,200,120,0.3);
+      color: #28c878;
     }
 
     /* ── LOADING STATE ── */
@@ -416,17 +423,15 @@
 
     footer span { color: var(--accent); }
   </style>
-  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
-  <!-- NAVBAR (Zoro will style his version in home.html) -->
   <nav>
-    <div class="logo">Watch<span>Folio</span></div>
+    <a href="home.html" class="logo">Watch<span>Folio</span></a>
     <ul class="nav-links">
       <li><a href="home.html">Home</a></li>
-      <li><a href="index.html" style="color: var(--text);">Search</a></li>
-      <li><a href="#">Watchlist</a></li>
+      <li><a href="index.html" class="active">Search</a></li>
+      <li><a href="watchlist.html">Watchlist</a></li>
       <li><a href="#">Profile</a></li>
     </ul>
     <div class="nav-right">
@@ -442,12 +447,7 @@
     <p>Search millions of movies and TV shows. Track what you've seen, rate what you loved.</p>
 
     <div class="search-wrap">
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Search movies, TV shows..."
-        autocomplete="off"
-      />
+      <input type="text" id="searchInput" placeholder="Search movies, TV shows..." autocomplete="off"/>
       <button onclick="handleSearch()">&#9906;</button>
     </div>
 
@@ -464,22 +464,19 @@
       <div class="section-title" id="sectionTitle">
         Trending Now <span id="resultCount"></span>
       </div>
-      <a href="#" class="see-all">See all →</a>
+      <a href="watchlist.html" class="see-all">My Watchlist →</a>
     </div>
 
-    <!-- Loading spinner -->
     <div class="loading" id="loading">
       <div class="spinner"></div>
       <p>Searching...</p>
     </div>
 
-    <!-- Empty state -->
-    <div class="empty" id="empty">
+    <div class="empty" id="emptyState">
       <div class="empty-icon">🎬</div>
       <p>No results found. Try a different title.</p>
     </div>
 
-    <!-- Cards grid -->
     <div class="results-grid" id="resultsGrid"></div>
   </div>
 
@@ -489,12 +486,42 @@
 
   <script>
     // ── CONFIG ──
-    // TODO: Replace with your own TMDB API key from themoviedb.org
-    const API_KEY = '12c07491ff5d8b932fe25c2d554dddbf';
+    const API_KEY = '12c07491ff5d8b932fe25c2d554dddbf'; // Replace with your TMDB API key
     const BASE_URL = 'https://api.themoviedb.org/3';
-    const IMG_URL = 'https://image.tmdb.org/t/p/w300';
+    const IMG_URL  = 'https://image.tmdb.org/t/p/w300';
 
     let currentFilter = 'all';
+
+    // ── WATCHLIST HELPERS ──
+    function getWatchlist() {
+      return JSON.parse(localStorage.getItem('watchfolio_watchlist') || '[]');
+    }
+
+    function saveWatchlist(list) {
+      localStorage.setItem('watchfolio_watchlist', JSON.stringify(list));
+    }
+
+    function isInWatchlist(id) {
+      return getWatchlist().some(i => i.id === id);
+    }
+
+    function addToWatchlist(item) {
+      const list = getWatchlist();
+      if (!list.some(i => i.id === item.id)) {
+        list.push({ ...item, status: 'planning', addedAt: Date.now() });
+        saveWatchlist(list);
+        // update button to green "Added!"
+        const btn = document.getElementById('wl-btn-' + item.id);
+        if (btn) {
+          btn.textContent = '✓ Added';
+          btn.classList.remove('primary');
+          btn.classList.add('added');
+        }
+        showToast(`"${item.title}" added to watchlist!`);
+      } else {
+        showToast('Already in your watchlist!');
+      }
+    }
 
     // ── FILTER ──
     function setFilter(filter, btn) {
@@ -502,17 +529,14 @@
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const query = document.getElementById('searchInput').value.trim();
-      if (query) handleSearch();
-      else loadTrending();
+      if (query) handleSearch(); else loadTrending();
     }
 
     // ── SEARCH ──
     function handleSearch() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) { loadTrending(); return; }
-
       document.getElementById('sectionTitle').innerHTML = `Results for "${query}" <span id="resultCount"></span>`;
-
       if (currentFilter === 'movie') searchMedia(query, 'movie');
       else if (currentFilter === 'tv') searchMedia(query, 'tv');
       else searchMulti(query);
@@ -521,21 +545,19 @@
     async function searchMulti(query) {
       showLoading();
       try {
-        const res = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
+        const res  = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
         const data = await res.json();
-        const results = (data.results || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv');
-        renderCards(results);
-      } catch (e) { showEmpty(); }
+        renderCards((data.results || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv'));
+      } catch { showEmpty(); }
     }
 
     async function searchMedia(query, type) {
       showLoading();
       try {
-        const res = await fetch(`${BASE_URL}/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
+        const res  = await fetch(`${BASE_URL}/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
         const data = await res.json();
-        const results = (data.results || []).map(r => ({ ...r, media_type: type }));
-        renderCards(results);
-      } catch (e) { showEmpty(); }
+        renderCards((data.results || []).map(r => ({ ...r, media_type: type })));
+      } catch { showEmpty(); }
     }
 
     // ── TRENDING ──
@@ -544,30 +566,38 @@
       showLoading();
       try {
         const type = currentFilter === 'tv' ? 'tv' : currentFilter === 'movie' ? 'movie' : 'all';
-        const res = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
+        const res  = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
         const data = await res.json();
         renderCards(data.results || []);
-      } catch (e) { showEmpty(); }
+      } catch { showEmpty(); }
     }
 
     // ── RENDER CARDS ──
     function renderCards(items) {
       hideLoading();
       const grid = document.getElementById('resultsGrid');
-
       if (!items.length) { showEmpty(); return; }
 
-      document.getElementById('resultCount').textContent = `— ${items.length} results`;
-      document.getElementById('empty').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'none';
+      const countEl = document.getElementById('resultCount');
+      if (countEl) countEl.textContent = `— ${items.length} results`;
 
       grid.innerHTML = items.map(item => {
-        const title = item.title || item.name || 'Unknown';
-        const year = (item.release_date || item.first_air_date || '').slice(0, 4);
+        const title  = item.title || item.name || 'Unknown';
+        const year   = (item.release_date || item.first_air_date || '').slice(0, 4);
         const rating = item.vote_average ? item.vote_average.toFixed(1) : '?';
-        const type = item.media_type === 'tv' ? 'TV' : 'Movie';
+        const type   = item.media_type === 'tv' ? 'TV' : 'Movie';
         const poster = item.poster_path
           ? `<img src="${IMG_URL}${item.poster_path}" alt="${title}" loading="lazy"/>`
           : `<div class="placeholder">🎬</div>`;
+
+        const inList = isInWatchlist(item.id);
+
+        const wlItem = {
+          id: item.id, title, year, rating,
+          type: item.media_type,
+          poster: item.poster_path
+        };
 
         return `
           <div class="card">
@@ -580,12 +610,15 @@
               <div class="card-title">${title}</div>
               <div class="card-meta">${year}</div>
               <div class="card-actions">
-                <button class="card-btn primary">+ Watchlist</button>
-                <button class="card-btn">Rate</button>
+                <button
+                  id="wl-btn-${item.id}"
+                  class="card-btn ${inList ? 'added' : 'primary'}"
+                  onclick='addToWatchlist(${JSON.stringify(wlItem)})'
+                >${inList ? '✓ Added' : '+ Watchlist'}</button>
+                <button class="card-btn" onclick="window.location.href='watchlist.html'">My List</button>
               </div>
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('');
     }
 
@@ -593,17 +626,39 @@
     function showLoading() {
       document.getElementById('loading').style.display = 'block';
       document.getElementById('resultsGrid').innerHTML = '';
-      document.getElementById('empty').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'none';
     }
 
-    function hideLoading() {
-      document.getElementById('loading').style.display = 'none';
-    }
+    function hideLoading() { document.getElementById('loading').style.display = 'none'; }
 
     function showEmpty() {
       hideLoading();
-      document.getElementById('empty').style.display = 'block';
+      document.getElementById('emptyState').style.display = 'block';
       document.getElementById('resultsGrid').innerHTML = '';
+    }
+
+    function showToast(msg) {
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = `
+          position:fixed;bottom:28px;right:28px;
+          background:var(--surface);border:1px solid var(--border);
+          border-left:3px solid var(--accent);
+          color:var(--text);padding:12px 20px;border-radius:8px;
+          font-size:13px;opacity:0;transform:translateY(10px);
+          transition:all 0.3s;pointer-events:none;z-index:999;
+        `;
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+      }, 2500);
     }
 
     // ── ENTER KEY ──
@@ -611,7 +666,7 @@
       if (e.key === 'Enter') handleSearch();
     });
 
-    // ── LOAD TRENDING ON START ──
+    // ── INIT ──
     loadTrending();
   </script>
 
