@@ -4,293 +4,256 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>WatchFolio — My Watchlist</title>
-  <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;600;700&family=Overpass+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0d1117;
-      --bg2: #131720;
-      --bg3: #1a2030;
-      --surface: #1f2937;
-      --border: #2a3548;
-      --accent: #3db4f2;
-      --accent-hover: #5ec5ff;
-      --accent-dim: rgba(61,180,242,0.12);
-      --green: #4cca74;
-      --orange: #f79a63;
-      --red: #e85d75;
-      --text: #c9d1d9;
-      --text-bright: #e6edf3;
-      --text-muted: #6e7b8f;
-      --text-dim: #4a5568;
-      --card-bg: #161b27;
-      --nav-bg: #151c28;
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #1e1e2e;
+      --accent: #e63946;
+      --accent2: #f4a261;
+      --text: #f0eee8;
+      --muted: #6b6880;
+      --card-bg: #111118;
     }
 
-    body { background: var(--bg); color: var(--text); font-family: 'Overpass', sans-serif; min-height: 100vh; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
 
+    /* ── NAV ── */
     nav {
-      background: var(--nav-bg);
-      border-bottom: 1px solid var(--border);
-      padding: 0 32px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 40px; border-bottom: 1px solid var(--border);
+      position: sticky; top: 0;
+      background: rgba(10,10,15,0.92);
+      backdrop-filter: blur(12px); z-index: 100;
     }
 
-    .nav-left { display: flex; align-items: center; gap: 28px; }
+    .logo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 28px;
+      letter-spacing: 2px; color: var(--text); text-decoration: none;
+    }
 
-    .logo { font-weight: 700; font-size: 20px; color: var(--accent); text-decoration: none; }
+    .logo span { color: var(--accent); }
 
-    .nav-links { display: flex; gap: 4px; list-style: none; }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
 
     .nav-links a {
-      color: var(--text-muted); text-decoration: none;
-      font-size: 13px; font-weight: 600;
-      padding: 6px 12px; border-radius: 4px; transition: all 0.15s;
+      color: var(--muted); text-decoration: none;
+      font-size: 14px; font-weight: 500; letter-spacing: 0.5px; transition: color 0.2s;
     }
 
-    .nav-links a:hover { color: var(--text-bright); background: var(--bg3); }
-    .nav-links a.active { color: var(--accent); background: var(--accent-dim); }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--text); }
 
-    .nav-right { display: flex; gap: 8px; }
+    .nav-right { display: flex; gap: 12px; align-items: center; }
 
     .btn-login {
-      background: none; border: 1px solid var(--border); color: var(--text-muted);
-      padding: 6px 16px; border-radius: 4px; font-family: 'Overpass', sans-serif;
-      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      padding: 8px 18px; border-radius: 6px; font-family: 'DM Sans', sans-serif;
+      font-size: 13px; cursor: pointer; transition: all 0.2s;
     }
 
-    .btn-login:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-login:hover { border-color: var(--accent); color: var(--text); }
 
     .btn-signup {
-      background: var(--accent); border: none; color: #0d1117;
-      padding: 6px 16px; border-radius: 4px; font-family: 'Overpass', sans-serif;
-      font-size: 13px; font-weight: 700; cursor: pointer;
+      background: var(--accent); border: none; color: white;
+      padding: 8px 18px; border-radius: 6px; font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s;
     }
 
-    /* BANNER */
-    .banner {
-      background: var(--bg2);
-      border-bottom: 1px solid var(--border);
-      padding: 36px 32px 28px;
-    }
+    .btn-signup:hover { opacity: 0.85; }
 
-    .banner-inner { max-width: 1200px; margin: 0 auto; }
-
-    .banner-title { font-size: 26px; font-weight: 700; color: var(--text-bright); margin-bottom: 4px; }
-    .banner-title span { color: var(--accent); }
-    .banner-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
-
-    .stats-row { display: flex; gap: 6px; flex-wrap: wrap; }
-
-    .stat-pill {
-      background: var(--bg3); border: 1px solid var(--border);
-      border-radius: 20px; padding: 5px 14px;
-      display: flex; align-items: center; gap: 7px; font-size: 12px;
-    }
-
-    .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-    .dot-all       { background: var(--accent); }
-    .dot-watching  { background: var(--green); }
-    .dot-completed { background: var(--accent); }
-    .dot-planning  { background: var(--orange); }
-    .dot-dropped   { background: var(--red); }
-
-    .stat-pill .num { font-weight: 700; color: var(--text-bright); font-family: 'Overpass Mono', monospace; }
-    .stat-pill .lbl { color: var(--text-muted); }
-
-    /* LAYOUT */
-    .layout {
+    /* ── HERO ── */
+    .hero {
+      padding: 60px 40px 40px;
       max-width: 1200px; margin: 0 auto;
-      padding: 24px 32px;
-      display: grid;
-      grid-template-columns: 190px 1fr;
-      gap: 20px;
-      align-items: start;
     }
 
-    /* SIDEBAR */
-    .sidebar {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-      position: sticky;
-      top: 68px;
+    .hero-label {
+      font-size: 11px; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
     }
 
-    .sidebar-section { padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .sidebar-section:last-child { border-bottom: none; }
-
-    .sidebar-label {
-      font-size: 10px; font-weight: 700;
-      color: var(--text-dim); letter-spacing: 1.5px;
-      text-transform: uppercase; padding: 0 14px 6px;
+    .hero h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(44px, 6vw, 72px);
+      letter-spacing: 3px; line-height: 0.95; margin-bottom: 16px;
     }
 
-    .sidebar-item {
+    .hero h1 em { font-style: normal; color: var(--accent); }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex; gap: 0;
+      border: 1px solid var(--border); border-radius: 10px;
+      overflow: hidden; margin-bottom: 32px;
+      max-width: 600px;
+    }
+
+    .stat {
+      flex: 1; padding: 14px 20px;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; gap: 3px;
+    }
+
+    .stat:last-child { border-right: none; }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px; letter-spacing: 1px; color: var(--accent);
+    }
+
+    .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+    /* ── CONTROLS ── */
+    .controls {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 7px 14px; font-size: 13px; color: var(--text-muted);
-      cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s;
+      padding: 0 40px 24px; max-width: 1200px; margin: 0 auto;
+      flex-wrap: wrap; gap: 12px;
     }
 
-    .sidebar-item:hover { color: var(--text-bright); background: var(--bg3); }
+    .filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    .sidebar-item.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-dim); }
-
-    .sidebar-count {
-      background: var(--bg3); color: var(--text-muted);
-      font-size: 10px; font-weight: 700;
-      padding: 2px 6px; border-radius: 10px;
-      font-family: 'Overpass Mono', monospace;
+    .filter-btn {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      padding: 7px 20px; border-radius: 99px; font-family: 'DM Sans', sans-serif;
+      font-size: 13px; cursor: pointer; transition: all 0.2s;
     }
 
-    .sidebar-item.active .sidebar-count { background: var(--accent-dim); color: var(--accent); }
-
-    .sort-group { padding: 6px 14px; display: flex; flex-direction: column; gap: 2px; }
-
-    .sort-option {
-      font-size: 12px; color: var(--text-muted);
-      padding: 5px 6px; border-radius: 4px;
-      cursor: pointer; transition: all 0.15s;
-      display: flex; align-items: center; gap: 6px;
+    .filter-btn:hover,
+    .filter-btn.active {
+      border-color: var(--accent); color: var(--text);
+      background: rgba(230,57,70,0.08);
     }
 
-    .sort-option::before {
-      content: ''; width: 4px; height: 4px; border-radius: 50%;
-      background: currentColor; opacity: 0.4; flex-shrink: 0;
+    .sort-select {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); padding: 7px 14px; border-radius: 8px;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; outline: none;
     }
 
-    .sort-option:hover { color: var(--text-bright); background: var(--bg3); }
-    .sort-option.active { color: var(--accent); }
+    /* ── GRID ── */
+    .section { max-width: 1200px; margin: 0 auto; padding: 0 40px 60px; }
 
-    /* MAIN */
-    .main { min-width: 0; }
-
-    .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-
-    .list-title { font-size: 14px; font-weight: 700; color: var(--text-bright); }
-    .list-title span { font-size: 12px; color: var(--text-muted); font-weight: 400; margin-left: 6px; font-family: 'Overpass Mono', monospace; }
-
-    /* GRID */
-    .cards-grid {
+    .watchlist-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 20px;
     }
 
-    /* CARD */
+    /* ── CARD ── */
     .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
-      position: relative;
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s; position: relative;
     }
 
-    .card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+    .card:hover { transform: translateY(-4px); border-color: var(--accent); }
 
-    .card-poster { width: 100%; aspect-ratio: 2/3; background: var(--bg3); position: relative; overflow: hidden; }
+    .card-poster {
+      width: 100%; aspect-ratio: 2/3;
+      background: var(--surface); position: relative; overflow: hidden;
+    }
 
     .card-poster img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
-    .card:hover .card-poster img { transform: scale(1.04); }
+    .card:hover .card-poster img { transform: scale(1.05); }
 
     .card-poster .no-img {
       width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 32px; color: var(--border);
+      font-size: 40px; color: var(--border);
     }
 
-    .status-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-    .bar-watching  { background: var(--green); }
-    .bar-completed { background: var(--accent); }
-    .bar-planning  { background: var(--orange); }
-    .bar-dropped   { background: var(--red); }
-
-    .card-score {
-      position: absolute; bottom: 6px; right: 6px;
-      background: rgba(13,17,23,0.88); color: var(--accent);
-      font-size: 10px; font-weight: 700; padding: 2px 6px;
-      border-radius: 3px; font-family: 'Overpass Mono', monospace;
+    .card-badge {
+      position: absolute; top: 8px; left: 8px;
+      background: var(--accent); color: white;
+      font-size: 10px; font-weight: 500; padding: 3px 8px;
+      border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase;
     }
 
-    .card-type {
-      position: absolute; top: 7px; left: 6px;
-      background: rgba(13,17,23,0.8); color: var(--text-muted);
-      font-size: 9px; font-weight: 700;
-      padding: 2px 5px; border-radius: 3px;
-      text-transform: uppercase; letter-spacing: 0.5px;
+    .card-rating {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,0.75); color: var(--accent2);
+      font-size: 11px; font-weight: 500; padding: 3px 7px; border-radius: 4px;
     }
 
-    /* HOVER OVERLAY */
-    .card-overlay {
-      position: absolute; inset: 0;
-      background: rgba(13,17,23,0.92);
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      gap: 7px; opacity: 0; transition: opacity 0.2s; padding: 10px;
+    /* status ribbon */
+    .card-status {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 4px 8px; font-size: 10px; font-weight: 500;
+      text-align: center; letter-spacing: 0.5px; text-transform: uppercase;
     }
 
-    .card:hover .card-overlay { opacity: 1; }
+    .status-watching  { background: rgba(244,162,97,0.85);  color: #0a0a0f; }
+    .status-completed { background: rgba(40,200,120,0.85);  color: #0a0a0f; }
+    .status-planning  { background: rgba(100,130,255,0.85); color: #0a0a0f; }
+    .status-dropped   { background: rgba(150,150,150,0.7);  color: #0a0a0f; }
 
-    .overlay-select {
-      width: 100%; background: var(--bg3); border: 1px solid var(--border);
-      color: var(--text); padding: 6px 8px; border-radius: 4px;
-      font-family: 'Overpass', sans-serif; font-size: 11px; cursor: pointer; outline: none;
-    }
-
-    .overlay-btn {
-      width: 100%; padding: 6px 0; border-radius: 4px;
-      font-family: 'Overpass', sans-serif; font-size: 12px; font-weight: 600;
-      cursor: pointer; border: none; transition: opacity 0.15s;
-    }
-
-    .overlay-btn.danger { background: var(--bg3); color: var(--red); border: 1px solid rgba(232,93,117,0.4); }
-    .overlay-btn.danger:hover { background: rgba(232,93,117,0.12); }
-
-    .card-body { padding: 9px 9px 10px; }
+    .card-info { padding: 12px; }
 
     .card-title {
-      font-size: 12px; font-weight: 600; color: var(--text-bright);
-      line-height: 1.4; margin-bottom: 3px;
-      display: -webkit-box; -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical; overflow: hidden;
+      font-size: 13px; font-weight: 500; line-height: 1.4; margin-bottom: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    .card-year { font-size: 11px; color: var(--text-muted); }
+    .card-meta { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
 
-    /* EMPTY */
-    .empty { text-align: center; padding: 80px 20px; display: none; }
-    .empty-icon { font-size: 44px; margin-bottom: 14px; }
-    .empty h3 { font-size: 17px; font-weight: 700; color: var(--text-bright); margin-bottom: 7px; }
-    .empty p { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; }
-    .empty a {
-      display: inline-block; background: var(--accent); color: #0d1117;
-      padding: 8px 20px; border-radius: 4px; text-decoration: none;
-      font-size: 13px; font-weight: 700;
+    .card-actions { display: flex; gap: 6px; }
+
+    .card-btn {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); font-size: 11px; padding: 5px 0; border-radius: 5px;
+      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s;
     }
 
-    /* TOAST */
+    .card-btn:hover { border-color: var(--accent); color: var(--text); }
+    .card-btn.danger:hover { background: rgba(230,57,70,0.1); color: var(--accent); }
+
+    .status-select {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      color: var(--muted); padding: 5px 8px; border-radius: 5px;
+      font-family: 'DM Sans', sans-serif; font-size: 11px;
+      cursor: pointer; outline: none; margin-bottom: 6px;
+    }
+
+    /* ── EMPTY ── */
+    .empty { text-align: center; padding: 100px 20px; display: none; }
+    .empty-icon { font-size: 56px; margin-bottom: 20px; }
+
+    .empty h2 {
+      font-family: 'Bebas Neue', sans-serif; font-size: 32px;
+      letter-spacing: 2px; margin-bottom: 10px;
+    }
+
+    .empty p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+    .btn-primary {
+      display: inline-block; background: var(--accent); color: white;
+      padding: 12px 28px; border-radius: 8px; text-decoration: none;
+      font-size: 14px; font-weight: 500; transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+
+    /* ── TOAST ── */
     .toast {
-      position: fixed; bottom: 22px; right: 22px;
+      position: fixed; bottom: 28px; right: 28px;
       background: var(--surface); border: 1px solid var(--border);
-      border-left: 3px solid var(--accent); color: var(--text-bright);
-      padding: 10px 16px; border-radius: 5px; font-size: 13px;
-      opacity: 0; transform: translateY(8px); transition: all 0.25s;
-      pointer-events: none; z-index: 999;
+      border-left: 3px solid var(--accent);
+      color: var(--text); padding: 12px 20px; border-radius: 8px;
+      font-size: 13px; opacity: 0; transform: translateY(10px);
+      transition: all 0.3s; pointer-events: none; z-index: 999;
     }
 
     .toast.show { opacity: 1; transform: translateY(0); }
 
+    /* ── FOOTER ── */
     footer {
-      border-top: 1px solid var(--border); padding: 18px 32px;
-      text-align: center; font-size: 12px; color: var(--text-dim);
+      border-top: 1px solid var(--border); padding: 24px 40px;
+      text-align: center; color: var(--muted); font-size: 12px;
     }
 
     footer span { color: var(--accent); }
@@ -299,84 +262,84 @@
 <body>
 
   <nav>
-    <div class="nav-left">
-      <a href="home.html" class="logo">WatchFolio</a>
-      <ul class="nav-links">
-        <li><a href="home.html">Home</a></li>
-        <li><a href="index.html">Search</a></li>
-        <li><a href="watchlist.html" class="active">Watchlist</a></li>
-        <li><a href="#">Profile</a></li>
-      </ul>
-    </div>
+    <a href="home.html" class="logo">Watch<span>Folio</span></a>
+    <ul class="nav-links">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="index.html">Search</a></li>
+      <li><a href="watchlist.html" class="active">Watchlist</a></li>
+      <li><a href="#">Profile</a></li>
+    </ul>
     <div class="nav-right">
       <button class="btn-login">Log in</button>
       <button class="btn-signup">Sign up</button>
     </div>
   </nav>
 
-  <div class="banner">
-    <div class="banner-inner">
-      <div class="banner-title">My <span>Watchlist</span></div>
-      <div class="banner-sub">Track everything you watch — movies, shows, and more.</div>
-      <div class="stats-row">
-        <div class="stat-pill"><span class="dot dot-all"></span><span class="num" id="totalCount">0</span><span class="lbl">Total</span></div>
-        <div class="stat-pill"><span class="dot dot-watching"></span><span class="num" id="watchingCount">0</span><span class="lbl">Watching</span></div>
-        <div class="stat-pill"><span class="dot dot-completed"></span><span class="num" id="completedCount">0</span><span class="lbl">Completed</span></div>
-        <div class="stat-pill"><span class="dot dot-planning"></span><span class="num" id="planningCount">0</span><span class="lbl">Planning</span></div>
-        <div class="stat-pill"><span class="dot dot-dropped"></span><span class="num" id="droppedCount">0</span><span class="lbl">Dropped</span></div>
+  <!-- HERO -->
+  <div class="hero">
+    <p class="hero-label">Your collection</p>
+    <h1>My <em>Watchlist</em></h1>
+
+    <!-- STATS -->
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value" id="totalCount">0</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="watchingCount">0</span>
+        <span class="stat-label">Watching</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="completedCount">0</span>
+        <span class="stat-label">Completed</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="planningCount">0</span>
+        <span class="stat-label">Planning</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="droppedCount">0</span>
+        <span class="stat-label">Dropped</span>
       </div>
     </div>
   </div>
 
-  <div class="layout">
-    <aside class="sidebar">
-      <div class="sidebar-section">
-        <div class="sidebar-label">Status</div>
-        <div class="sidebar-item active" onclick="setFilter('all', this)">All <span class="sidebar-count" id="sc-all">0</span></div>
-        <div class="sidebar-item" onclick="setFilter('watching', this)">Watching <span class="sidebar-count" id="sc-watching">0</span></div>
-        <div class="sidebar-item" onclick="setFilter('completed', this)">Completed <span class="sidebar-count" id="sc-completed">0</span></div>
-        <div class="sidebar-item" onclick="setFilter('planning', this)">Planning <span class="sidebar-count" id="sc-planning">0</span></div>
-        <div class="sidebar-item" onclick="setFilter('dropped', this)">Dropped <span class="sidebar-count" id="sc-dropped">0</span></div>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">Sort by</div>
-        <div class="sort-group">
-          <div class="sort-option active" onclick="setSort('newest', this)">Newest added</div>
-          <div class="sort-option" onclick="setSort('oldest', this)">Oldest added</div>
-          <div class="sort-option" onclick="setSort('rating', this)">Highest rated</div>
-          <div class="sort-option" onclick="setSort('title', this)">Title A–Z</div>
-        </div>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">Type</div>
-        <div class="sort-group">
-          <div class="sort-option active" onclick="setType('all', this)">All types</div>
-          <div class="sort-option" onclick="setType('movie', this)">Movies only</div>
-          <div class="sort-option" onclick="setType('tv', this)">TV only</div>
-        </div>
-      </div>
-    </aside>
-
-    <main class="main">
-      <div class="list-header">
-        <div class="list-title" id="listTitle">All <span id="listCount"></span></div>
-      </div>
-      <div class="empty" id="emptyState">
-        <div class="empty-icon">📋</div>
-        <h3>Your list is empty</h3>
-        <p>Search for movies and shows and add them here.</p>
-        <a href="index.html">Browse titles</a>
-      </div>
-      <div class="cards-grid" id="cardsGrid"></div>
-    </main>
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="filter-tabs">
+      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" onclick="setFilter('watching', this)">Watching</button>
+      <button class="filter-btn" onclick="setFilter('completed', this)">Completed</button>
+      <button class="filter-btn" onclick="setFilter('planning', this)">Planning</button>
+      <button class="filter-btn" onclick="setFilter('dropped', this)">Dropped</button>
+    </div>
+    <select class="sort-select" onchange="setSortAndRender(this.value)">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="rating">Highest rated</option>
+      <option value="title">A → Z</option>
+    </select>
   </div>
 
-  <footer>Built by <span>Conqueror</span> & <span>Zoro</span> · Data by TMDB</footer>
+  <!-- GRID -->
+  <div class="section">
+    <div class="empty" id="emptyState">
+      <div class="empty-icon">🎬</div>
+      <h2>Nothing here yet</h2>
+      <p>Go search for movies and shows and add them to your watchlist!</p>
+      <a href="index.html" class="btn-primary">Browse titles</a>
+    </div>
+    <div class="watchlist-grid" id="watchlistGrid"></div>
+  </div>
+
+  <footer>Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB</footer>
   <div class="toast" id="toast"></div>
 
   <script>
     const IMG_URL = 'https://image.tmdb.org/t/p/w300';
-    let currentFilter = 'all', currentSort = 'newest', currentType = 'all';
+    let currentFilter = 'all';
+    let currentSort = 'newest';
 
     const getWatchlist = () => JSON.parse(localStorage.getItem('watchfolio_watchlist') || '[]');
     const saveWatchlist = l => localStorage.setItem('watchfolio_watchlist', JSON.stringify(l));
@@ -384,7 +347,7 @@
     function updateStatus(id, status) {
       const list = getWatchlist();
       const item = list.find(i => i.id === id);
-      if (item) { item.status = status; saveWatchlist(list); render(); showToast(`Moved to "${status}"`); }
+      if (item) { item.status = status; saveWatchlist(list); updateStats(); showToast(`Status updated to "${status}"`); }
     }
 
     function removeItem(id) {
@@ -392,33 +355,13 @@
       render(); showToast('Removed from watchlist');
     }
 
-    function setFilter(f, el) {
+    function setFilter(f, btn) {
       currentFilter = f;
-      document.querySelectorAll('.sidebar-item').forEach(e => e.classList.remove('active'));
-      el.classList.add('active'); render();
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active'); render();
     }
 
-    function setSort(s, el) {
-      currentSort = s;
-      el.closest('.sort-group').querySelectorAll('.sort-option').forEach(e => e.classList.remove('active'));
-      el.classList.add('active'); render();
-    }
-
-    function setType(t, el) {
-      currentType = t;
-      el.closest('.sort-group').querySelectorAll('.sort-option').forEach(e => e.classList.remove('active'));
-      el.classList.add('active'); render();
-    }
-
-    function updateStats() {
-      const list = getWatchlist();
-      const c = { all: list.length, watching: 0, completed: 0, planning: 0, dropped: 0 };
-      list.forEach(i => { if (c[i.status] !== undefined) c[i.status]++; });
-      ['all','watching','completed','planning','dropped'].forEach(k => {
-        const a = document.getElementById(k+'Count'), b = document.getElementById('sc-'+k);
-        if (a) a.textContent = c[k]; if (b) b.textContent = c[k];
-      });
-    }
+    function setSortAndRender(v) { currentSort = v; render(); }
 
     function sortList(list) {
       if (currentSort === 'oldest') return [...list].sort((a,b) => a.addedAt - b.addedAt);
@@ -427,17 +370,23 @@
       return [...list].sort((a,b) => b.addedAt - a.addedAt);
     }
 
+    function updateStats() {
+      const list = getWatchlist();
+      document.getElementById('totalCount').textContent     = list.length;
+      document.getElementById('watchingCount').textContent  = list.filter(i => i.status === 'watching').length;
+      document.getElementById('completedCount').textContent = list.filter(i => i.status === 'completed').length;
+      document.getElementById('planningCount').textContent  = list.filter(i => i.status === 'planning').length;
+      document.getElementById('droppedCount').textContent   = list.filter(i => i.status === 'dropped').length;
+    }
+
     function render() {
       updateStats();
       let list = getWatchlist();
       if (currentFilter !== 'all') list = list.filter(i => i.status === currentFilter);
-      if (currentType !== 'all')   list = list.filter(i => i.type === currentType);
       list = sortList(list);
 
-      const grid = document.getElementById('cardsGrid');
+      const grid  = document.getElementById('watchlistGrid');
       const empty = document.getElementById('emptyState');
-      const label = currentFilter === 'all' ? 'All' : currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1);
-      document.getElementById('listTitle').innerHTML = `${label} <span>${list.length} titles</span>`;
 
       if (!list.length) { empty.style.display = 'block'; grid.innerHTML = ''; return; }
       empty.style.display = 'none';
@@ -447,26 +396,27 @@
         const poster = item.poster
           ? `<img src="${IMG_URL}${item.poster}" alt="${item.title}" loading="lazy"/>`
           : `<div class="no-img">🎬</div>`;
+
         return `
           <div class="card">
             <div class="card-poster">
-              <div class="status-bar bar-${status}"></div>
               ${poster}
-              <div class="card-type">${item.type === 'tv' ? 'TV' : 'Film'}</div>
-              <div class="card-score">★ ${item.rating || '?'}</div>
-              <div class="card-overlay">
-                <select class="overlay-select" onchange="updateStatus(${item.id}, this.value)" onclick="event.stopPropagation()">
-                  <option value="planning"  ${status==='planning' ?'selected':''}>Planning</option>
-                  <option value="watching"  ${status==='watching' ?'selected':''}>Watching</option>
-                  <option value="completed" ${status==='completed'?'selected':''}>Completed</option>
-                  <option value="dropped"   ${status==='dropped'  ?'selected':''}>Dropped</option>
-                </select>
-                <button class="overlay-btn danger" onclick="removeItem(${item.id});event.stopPropagation()">Remove</button>
-              </div>
+              <div class="card-badge">${item.type === 'tv' ? 'TV' : 'Movie'}</div>
+              <div class="card-rating">★ ${item.rating || '?'}</div>
+              <div class="card-status status-${status}">${status}</div>
             </div>
-            <div class="card-body">
+            <div class="card-info">
               <div class="card-title">${item.title}</div>
-              <div class="card-year">${item.year || ''}</div>
+              <div class="card-meta">${item.year || ''}</div>
+              <select class="status-select" onchange="updateStatus(${item.id}, this.value)">
+                <option value="planning"  ${status==='planning'  ?'selected':''}>Planning</option>
+                <option value="watching"  ${status==='watching'  ?'selected':''}>Watching</option>
+                <option value="completed" ${status==='completed' ?'selected':''}>Completed</option>
+                <option value="dropped"   ${status==='dropped'   ?'selected':''}>Dropped</option>
+              </select>
+              <div class="card-actions">
+                <button class="card-btn danger" onclick="removeItem(${item.id})">Remove</button>
+              </div>
             </div>
           </div>`;
       }).join('');
