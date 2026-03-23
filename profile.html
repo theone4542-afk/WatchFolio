@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WatchFolio — Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .profile-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 24px;
+    }
+
+    /* ── PROFILE HEADER ── */
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 32px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+    }
+
+    .avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .profile-info { flex: 1; }
+    .profile-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 2px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .profile-email {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .profile-joined {
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .profile-joined span { color: var(--accent2); }
+
+    .btn-logout {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 9px 20px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      align-self: flex-start;
+    }
+    .btn-logout:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── STATS ── */
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .profile-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .profile-stat-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      color: var(--accent);
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+    .profile-stat-label {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── WATCHLIST PREVIEW ── */
+    .profile-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .profile-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .profile-section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+    }
+
+    .empty-watchlist {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+    .empty-watchlist .empty-icon { font-size: 36px; margin-bottom: 10px; }
+    .empty-watchlist p { font-size: 14px; }
+    .empty-watchlist a {
+      display: inline-block;
+      margin-top: 14px;
+      background: var(--accent);
+      color: white;
+      padding: 9px 22px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .empty-watchlist a:hover { opacity: 0.85; }
+
+    /* not logged in state */
+    .not-logged-in {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--muted);
+    }
+    .not-logged-in .empty-icon { font-size: 48px; margin-bottom: 16px; }
+    .not-logged-in h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .not-logged-in p { font-size: 14px; margin-bottom: 24px; }
+    .not-logged-in a {
+      background: var(--accent);
+      color: white;
+      padding: 12px 28px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .not-logged-in a:hover { opacity: 0.85; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 600px) {
+      .profile-header { flex-direction: column; text-align: center; }
+      .profile-stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="home.html" class="logo">Watch<span>Folio</span></a>
+    <ul class="nav-links">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="index.html">Search</a></li>
+      <li><a href="#">Watchlist</a></li>
+      <li><a href="profile.html" style="color: var(--text);">Profile</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="btn-login" id="navLogin" onclick="location.href='login.html'">Log in</button>
+      <button class="btn-signup" id="navSignup" onclick="location.href='signup.html'">Sign up</button>
+    </div>
+  </nav>
+
+  <div class="profile-wrapper">
+
+    <!-- NOT LOGGED IN STATE -->
+    <div class="not-logged-in" id="notLoggedIn">
+      <div class="empty-icon">🔐</div>
+      <h2>You're not logged in</h2>
+      <p>Log in or create an account to view your profile and watchlist.</p>
+      <a href="auth.html">Log In / Sign Up</a>
+    </div>
+
+    <!-- LOGGED IN STATE -->
+    <div id="loggedIn" class="hidden">
+
+      <!-- Header -->
+      <div class="profile-header">
+        <div class="avatar" id="avatarInitial">?</div>
+        <div class="profile-info">
+          <div class="profile-name" id="profileName">Loading...</div>
+          <div class="profile-email" id="profileEmail"></div>
+          <div class="profile-joined">Member since <span id="profileJoined"></span></div>
+        </div>
+        <button class="btn-logout" onclick="handleLogout()">Log Out</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-number" id="statWatchlist">0</div>
+          <div class="profile-stat-label">Watchlist</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-number" id="statWatched">0</div>
+          <div class="profile-stat-label">Watched</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-number" id="statRated">0</div>
+          <div class="profile-stat-label">Rated</div>
+        </div>
+      </div>
+
+      <!-- Watchlist Preview -->
+      <div class="profile-section">
+        <div class="profile-section-header">
+          <div class="profile-section-title">My Watchlist</div>
+          <a href="#" class="see-all">See all →</a>
+        </div>
+        <div class="empty-watchlist">
+          <div class="empty-icon">🎬</div>
+          <p>Your watchlist is empty.</p>
+          <a href="index.html">Browse movies</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL      = 'https://uuudwramzdijxsekljbp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dWR3cmFtemRpanhzZWtsamJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTg2NTAsImV4cCI6MjA4OTc3NDY1MH0.l_wEz20wGZUlmfqSXTx73ctJnfSU02QWe7Yf5r-_tT4';
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function loadProfile() {
+      const { data: { session } } = await _supabase.auth.getSession();
+
+      if (!session) {
+        document.getElementById('notLoggedIn').classList.remove('hidden');
+        document.getElementById('navLogin').style.display = 'none';
+        document.getElementById('navSignup').style.display = 'none';
+        return;
+      }
+
+      const user = session.user;
+      document.getElementById('loggedIn').classList.remove('hidden');
+      document.getElementById('navLogin').style.display = 'none';
+      document.getElementById('navSignup').style.display = 'none';
+      document.getElementById('notLoggedIn').classList.add('hidden');
+
+      // fill in profile info
+      const username = user.user_metadata?.username || user.email.split('@')[0];
+      const initial  = username.charAt(0).toUpperCase();
+      const joined   = new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      document.getElementById('avatarInitial').textContent = initial;
+      document.getElementById('profileName').textContent   = username;
+      document.getElementById('profileEmail').textContent  = user.email;
+      document.getElementById('profileJoined').textContent = joined;
+    }
+
+    async function handleLogout() {
+      await _supabase.auth.signOut();
+      location.href = 'home.html';
+    }
+
+    loadProfile();
+  </script>
+
+</body>
+</html>
