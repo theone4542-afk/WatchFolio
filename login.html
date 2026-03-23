@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WatchFolio — Log In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .auth-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .auth-wrapper::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(230,57,70,0.07) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .auth-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 2px;
+      text-align: center;
+      margin-bottom: 8px;
+      text-decoration: none;
+      display: block;
+      color: var(--text);
+    }
+    .auth-logo span { color: var(--accent); }
+
+    .auth-tagline {
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .auth-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .auth-form { display: flex; flex-direction: column; gap: 14px; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .field input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    .field input::placeholder { color: var(--muted); }
+    .field input:focus { border-color: var(--accent); }
+
+    .auth-submit {
+      background: var(--accent);
+      border: none;
+      color: white;
+      padding: 13px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 4px;
+      width: 100%;
+    }
+    .auth-submit:hover { opacity: 0.85; }
+    .auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .auth-msg {
+      padding: 10px 14px;
+      border-radius: 7px;
+      font-size: 13px;
+      display: none;
+    }
+    .auth-msg.success {
+      background: rgba(0,200,100,0.1);
+      border: 1px solid rgba(0,200,100,0.25);
+      color: #00c864;
+      display: block;
+    }
+    .auth-msg.error {
+      background: rgba(230,57,70,0.1);
+      border: 1px solid rgba(230,57,70,0.25);
+      color: var(--accent);
+      display: block;
+    }
+
+    .auth-switch {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .auth-switch a {
+      color: var(--accent);
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+    .auth-switch a:hover { opacity: 0.8; }
+
+    .back-home {
+      display: block;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .back-home:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="home.html" class="logo">Watch<span>Folio</span></a>
+    <ul class="nav-links">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="index.html">Search</a></li>
+      <li><a href="#">Watchlist</a></li>
+      <li><a href="profile.html">Profile</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="btn-login" onclick="location.href='login.html'">Log in</button>
+      <button class="btn-signup" onclick="location.href='signup.html'">Sign up</button>
+    </div>
+  </nav>
+
+  <div class="auth-wrapper">
+    <div class="auth-box">
+      <a href="home.html" class="auth-logo">Watch<span>Folio</span></a>
+      <p class="auth-tagline">Welcome back</p>
+      <div class="auth-title">Log In</div>
+
+      <form class="auth-form" onsubmit="handleLogin(event)">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="you@email.com" required/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required/>
+        </div>
+        <div class="auth-msg" id="loginMsg"></div>
+        <button type="submit" class="auth-submit" id="loginBtn">Log In</button>
+      </form>
+
+      <div class="auth-switch">
+        Don't have an account? <a href="signup.html">Sign up</a>
+      </div>
+      <a href="home.html" class="back-home">← Back to home</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL      = 'https://uuudwramzdijxsekljbp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dWR3cmFtemRpanhzZWtsamJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTg2NTAsImV4cCI6MjA4OTc3NDY1MH0.l_wEz20wGZUlmfqSXTx73ctJnfSU02QWe7Yf5r-_tT4';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // redirect if already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) location.href = 'profile.html';
+    });
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.textContent = 'Logging in...';
+
+      const email    = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        const msg = document.getElementById('loginMsg');
+        msg.textContent = error.message;
+        msg.className = 'auth-msg error';
+        btn.disabled = false;
+        btn.textContent = 'Log In';
+      } else {
+        const msg = document.getElementById('loginMsg');
+        msg.textContent = 'Logged in! Redirecting...';
+        msg.className = 'auth-msg success';
+        setTimeout(() => location.href = 'profile.html', 1000);
+      }
+    }
+  </script>
+
+</body>
+</html>
