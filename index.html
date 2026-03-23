@@ -104,6 +104,35 @@
 
     .btn-signup:hover { opacity: 0.85; }
 
+    /* ── USER PILL (shown when logged in) ── */
+    .user-pill {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 6px 14px 6px 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .user-pill .avatar {
+      width: 24px; height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: white; font-weight: 600;
+    }
+
+    .btn-logout {
+      background: none; border: none;
+      color: var(--muted); font-size: 12px;
+      cursor: pointer; padding: 0; margin-left: 4px;
+      transition: color 0.2s;
+    }
+    .btn-logout:hover { color: var(--accent); }
+
     /* ── HERO / SEARCH SECTION ── */
     .hero {
       text-align: center;
@@ -412,6 +441,22 @@
 
     .empty-icon { font-size: 48px; margin-bottom: 16px; }
 
+    /* ── LOGIN PROMPT ── */
+    .login-prompt {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 12px 20px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .login-prompt a { color: var(--accent); text-decoration: none; }
+
     /* ── FOOTER ── */
     footer {
       border-top: 1px solid var(--border);
@@ -432,11 +477,12 @@
       <li><a href="home.html">Home</a></li>
       <li><a href="index.html" class="active">Search</a></li>
       <li><a href="watchlist.html">Watchlist</a></li>
-      <li><a href="#">Profile</a></li>
+      <li><a href="profile.html">Profile</a></li>
     </ul>
-    <div class="nav-right">
-      <button class="btn-login">Log in</button>
-      <button class="btn-signup">Sign up</button>
+    <div class="nav-right" id="navRight">
+      <!-- swapped by JS based on auth state -->
+      <button class="btn-login" onclick="window.location.href='login.html'">Log in</button>
+      <button class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>
     </div>
   </nav>
 
@@ -467,6 +513,10 @@
       <a href="watchlist.html" class="see-all">My Watchlist →</a>
     </div>
 
+    <div class="login-prompt" id="loginPrompt">
+      🔒 <a href="login.html">Log in</a> or <a href="signup.html">sign up</a> to save titles to your watchlist.
+    </div>
+
     <div class="loading" id="loading">
       <div class="spinner"></div>
       <p>Searching...</p>
@@ -484,43 +534,130 @@
     Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB
   </footer>
 
+  <!-- ── SUPABASE ── -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // ── CONFIG ──
-    const API_KEY = '12c07491ff5d8b932fe25c2d554dddbf'; // Replace with your TMDB API key
+    // ════════════════════════════════════════════
+    // 🔧 PASTE YOUR CREDENTIALS HERE
+    // ════════════════════════════════════════════
+    const SUPABASE_URL = 'https://vhnbulihurzpzdzdivlc.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_OzoDhNIRlJhfvLiZYs3myg_hJNTxyPq';
+    // ════════════════════════════════════════════
+
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ── TMDB CONFIG ──
+    const API_KEY  = '12c07491ff5d8b932fe25c2d554dddbf';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMG_URL  = 'https://image.tmdb.org/t/p/w300';
 
     let currentFilter = 'all';
+    let currentUser   = null;
+    let userWatchlistIds = new Set(); // fast O(1) lookup
 
-    // ── WATCHLIST HELPERS ──
-    function getWatchlist() {
-      return JSON.parse(localStorage.getItem('watchfolio_watchlist') || '[]');
-    }
+    // ── AUTH STATE ──
+    async function initAuth() {
+      const { data: { session } } = await sb.auth.getSession();
+      currentUser = session?.user ?? null;
+      updateNavAuth();
 
-    function saveWatchlist(list) {
-      localStorage.setItem('watchfolio_watchlist', JSON.stringify(list));
-    }
-
-    function isInWatchlist(id) {
-      return getWatchlist().some(i => i.id === id);
-    }
-
-    function addToWatchlist(item) {
-      const list = getWatchlist();
-      if (!list.some(i => i.id === item.id)) {
-        list.push({ ...item, status: 'planning', addedAt: Date.now() });
-        saveWatchlist(list);
-        // update button to green "Added!"
-        const btn = document.getElementById('wl-btn-' + item.id);
-        if (btn) {
-          btn.textContent = '✓ Added';
-          btn.classList.remove('primary');
-          btn.classList.add('added');
-        }
-        showToast(`"${item.title}" added to watchlist!`);
+      if (currentUser) {
+        await loadUserWatchlistIds();
+        document.getElementById('loginPrompt').style.display = 'none';
       } else {
-        showToast('Already in your watchlist!');
+        document.getElementById('loginPrompt').style.display = 'block';
       }
+
+      sb.auth.onAuthStateChange((_event, session) => {
+        currentUser = session?.user ?? null;
+        updateNavAuth();
+        if (currentUser) {
+          loadUserWatchlistIds().then(() => {
+            document.getElementById('loginPrompt').style.display = 'none';
+            // re-render current results to update button states
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) handleSearch(); else loadTrending();
+          });
+        } else {
+          userWatchlistIds.clear();
+          document.getElementById('loginPrompt').style.display = 'block';
+        }
+      });
+    }
+
+    function updateNavAuth() {
+      const navRight = document.getElementById('navRight');
+      if (currentUser) {
+        const email = currentUser.email || '';
+        const initial = email.charAt(0).toUpperCase();
+        navRight.innerHTML = `
+          <div class="user-pill">
+            <div class="avatar">${initial}</div>
+            ${email.split('@')[0]}
+            <button class="btn-logout" onclick="handleLogout()">✕</button>
+          </div>`;
+      } else {
+        navRight.innerHTML = `
+          <button class="btn-login" onclick="window.location.href='login.html'">Log in</button>
+          <button class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>`;
+      }
+    }
+
+    async function handleLogout() {
+      await sb.auth.signOut();
+      showToast('Logged out!');
+    }
+
+    // ── LOAD WHICH MOVIE IDs THE USER ALREADY SAVED ──
+    async function loadUserWatchlistIds() {
+      if (!currentUser) return;
+      const { data, error } = await sb
+        .from('watchlist')
+        .select('movie_id')
+        .eq('user_id', currentUser.id);
+      if (!error && data) {
+        userWatchlistIds = new Set(data.map(r => r.movie_id));
+      }
+    }
+
+    // ── ADD TO WATCHLIST (Supabase) ──
+    async function addToWatchlist(item) {
+      if (!currentUser) {
+        showToast('Please log in to save to your watchlist!');
+        return;
+      }
+
+      if (userWatchlistIds.has(item.id)) {
+        showToast('Already in your watchlist!');
+        return;
+      }
+
+      const { error } = await sb.from('watchlist').insert({
+        user_id:  currentUser.id,
+        movie_id: item.id,
+        title:    item.title,
+        poster:   item.poster || null,
+        rating:   String(item.rating),
+        year:     String(item.year),
+        type:     item.type,
+        status:   'planning'
+      });
+
+      if (error) {
+        console.error(error);
+        showToast('Error saving — please try again.');
+        return;
+      }
+
+      userWatchlistIds.add(item.id);
+      const btn = document.getElementById('wl-btn-' + item.id);
+      if (btn) {
+        btn.textContent = '✓ Added';
+        btn.classList.remove('primary');
+        btn.classList.add('added');
+      }
+      showToast(`"${item.title}" added to watchlist!`);
     }
 
     // ── FILTER ──
@@ -591,7 +728,7 @@
           ? `<img src="${IMG_URL}${item.poster_path}" alt="${title}" loading="lazy"/>`
           : `<div class="placeholder">🎬</div>`;
 
-        const inList = isInWatchlist(item.id);
+        const inList = userWatchlistIds.has(item.id);
 
         const wlItem = {
           id: item.id, title, year, rating,
@@ -667,7 +804,7 @@
     });
 
     // ── INIT ──
-    loadTrending();
+    initAuth().then(() => loadTrending());
   </script>
 
 </body>
