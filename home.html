@@ -232,8 +232,8 @@
       <li><a href="profile.html">Profile</a></li>
     </ul>
     <div class="nav-right">
-      <button class="btn-login" onclick="location.href='login.html'">Log in</button>
-      <button class="btn-signup" onclick="location.href='signup.html'">Sign up</button>
+      <button class="btn-login" id="navLogin" onclick="location.href='login.html'">Log in</button>
+      <button class="btn-signup" id="navSignup" onclick="location.href='signup.html'">Sign up</button>
     </div>
   </nav>
 
@@ -312,11 +312,17 @@
     Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const API_KEY  = '12c07491ff5d8b932fe25c2d554dddbf';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMG_URL  = 'https://image.tmdb.org/t/p/w300';
     const BG_URL   = 'https://image.tmdb.org/t/p/w1280';
+
+    const _supabase = window.supabase.createClient(
+      'https://uuudwramzdijxsekljbp.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dWR3cmFtemRpanhzZWtsamJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTg2NTAsImV4cCI6MjA4OTc3NDY1MH0.l_wEz20wGZUlmfqSXTx73ctJnfSU02QWe7Yf5r-_tT4'
+    );
 
     let featuredMovies = [], currentBanner = 0, bannerTimer;
 
@@ -404,8 +410,17 @@
     function hideLoading() { document.getElementById('loading').style.display = 'none'; }
     function showEmpty()   { hideLoading(); document.getElementById('empty').style.display = 'block'; document.getElementById('resultsGrid').innerHTML = ''; }
 
+    // ── INIT ──
     loadFeatured();
     loadTrending();
+
+    // ── HIDE NAV BUTTONS IF LOGGED IN ──
+    _supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        document.getElementById('navLogin').style.display = 'none';
+        document.getElementById('navSignup').style.display = 'none';
+      }
+    });
   </script>
 
 </body>
