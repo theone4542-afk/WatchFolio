@@ -195,23 +195,28 @@
   <script>
     const SUPABASE_URL      = 'https://uuudwramzdijxsekljbp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dWR3cmFtemRpanhzZWtsamJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTg2NTAsImV4cCI6MjA4OTc3NDY1MH0.l_wEz20wGZUlmfqSXTx73ctJnfSU02QWe7Yf5r-_tT4';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // redirect if already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    _supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) location.href = 'profile.html';
+      // hide nav buttons if logged in
+      document.getElementById('navLogin').style.display = 'none';
+      document.getElementById('navSignup').style.display = 'none';
     });
 
     async function handleLogin(e) {
       e.preventDefault();
       const btn = document.getElementById('loginBtn');
+      document.getElementById('navLogin').style.display = 'none';
+      document.getElementById('navSignup').style.display = 'none';
       btn.disabled = true;
       btn.textContent = 'Logging in...';
 
       const email    = document.getElementById('loginEmail').value;
       const password = document.getElementById('loginPassword').value;
 
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await _supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
         const msg = document.getElementById('loginMsg');

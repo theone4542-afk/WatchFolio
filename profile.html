@@ -197,8 +197,8 @@
       <li><a href="profile.html" style="color: var(--text);">Profile</a></li>
     </ul>
     <div class="nav-right">
-      <button class="btn-login" onclick="location.href='auth.html'">Log in</button>
-      <button class="btn-signup" onclick="location.href='auth.html'">Sign up</button>
+      <button class="btn-login" id="navLogin" onclick="location.href='login.html'">Log in</button>
+      <button class="btn-signup" id="navSignup" onclick="location.href='signup.html'">Sign up</button>
     </div>
   </nav>
 
@@ -266,18 +266,22 @@
   <script>
     const SUPABASE_URL      = 'https://uuudwramzdijxsekljbp.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dWR3cmFtemRpanhzZWtsamJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTg2NTAsImV4cCI6MjA4OTc3NDY1MH0.l_wEz20wGZUlmfqSXTx73ctJnfSU02QWe7Yf5r-_tT4';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadProfile() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await _supabase.auth.getSession();
 
       if (!session) {
         document.getElementById('notLoggedIn').classList.remove('hidden');
+        document.getElementById('navLogin').style.display = 'none';
+        document.getElementById('navSignup').style.display = 'none';
         return;
       }
 
       const user = session.user;
       document.getElementById('loggedIn').classList.remove('hidden');
+      document.getElementById('navLogin').style.display = 'none';
+      document.getElementById('navSignup').style.display = 'none';
       document.getElementById('notLoggedIn').classList.add('hidden');
 
       // fill in profile info
@@ -292,7 +296,7 @@
     }
 
     async function handleLogout() {
-      await supabase.auth.signOut();
+      await _supabase.auth.signOut();
       location.href = 'home.html';
     }
 
