@@ -634,15 +634,16 @@
       }
 
       const { error } = await sb.from('watchlist').insert({
-        user_id:  currentUser.id,
-        movie_id: item.id,
-        title:    item.title,
-        poster:   item.poster || null,
-        rating:   String(item.rating),
-        year:     String(item.year),
-        type:     item.type,
-        status:   'planning'
-      });
+  user_id:     currentUser.id,
+  movie_id:    item.id,
+  title:       item.title,
+  poster:      item.poster || null,
+  tmdb_rating: String(item.rating), // ⭐ TMDB score goes here
+  rating:      null,                // ⭐ user rating (empty for now)
+  year:        String(item.year),
+  type:        item.type,
+  status:      'planning'
+});
 
       if (error) {
         console.error(error);
