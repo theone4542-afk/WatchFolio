@@ -204,9 +204,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL      = 'https://uuudwramzdijxsekljbp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dWR3cmFtemRpanhzZWtsamJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTg2NTAsImV4cCI6MjA4OTc3NDY1MH0.l_wEz20wGZUlmfqSXTx73ctJnfSU02QWe7Yf5r-_tT4';
-    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL      = 'https://vhnbulihurzpzdzdivlc.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_OzoDhNIRlJhfvLiZYs3myg_hJNTxyPq';
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // redirect if already logged in
     _supabase.auth.getSession().then(({ data: { session } }) => {

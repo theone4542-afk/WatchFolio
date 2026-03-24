@@ -554,9 +554,39 @@
 
     let currentFilter = 'all';
     let currentUser   = null;
-    let userWatchlistIds = new Set(); // fast O(1) lookup
+    let userWatchlistIds = new Set();
 
-    // ── AUTH STATE ──
+    async function restoreSessionFromHash() {
+      const hash = window.location.hash.startsWith('#')
+        ? new URLSearchParams(window.location.hash.slice(1))
+        : null;
+      if (!hash) return;
+      const access_token = hash.get('access_token');
+      const refresh_token = hash.get('refresh_token');
+      if (!access_token || !refresh_token) return;
+      const { error } = await sb.auth.setSession({ access_token, refresh_token });
+      if (error) {
+        console.error('Session restore failed:', error);
+        return;
+      }
+      history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    function getDisplayTitle(item) {
+      return item.title || item.name || 'Unknown';
+    }
+
+    function getDisplayYear(item) {
+      return (item.release_date || item.first_air_date || '').slice(0, 4);
+    }
+
+    function getMediaType(item) {
+      return item.media_type === 'tv' ? 'tv' : 'movie';
+    }
+
+    // openMedia replaced by modal/${id}`, '_blank', 'noopener');
+    
+
     async function initAuth() {
       const { data: { session } } = await sb.auth.getSession();
       currentUser = session?.user ?? null;
@@ -569,20 +599,18 @@
         document.getElementById('loginPrompt').style.display = 'block';
       }
 
-      sb.auth.onAuthStateChange((_event, session) => {
+      sb.auth.onAuthStateChange(async (_event, session) => {
         currentUser = session?.user ?? null;
         updateNavAuth();
         if (currentUser) {
-          loadUserWatchlistIds().then(() => {
-            document.getElementById('loginPrompt').style.display = 'none';
-            // re-render current results to update button states
-            const query = document.getElementById('searchInput').value.trim();
-            if (query) handleSearch(); else loadTrending();
-          });
+          await loadUserWatchlistIds();
+          document.getElementById('loginPrompt').style.display = 'none';
         } else {
           userWatchlistIds.clear();
           document.getElementById('loginPrompt').style.display = 'block';
         }
+        const query = document.getElementById('searchInput').value.trim();
+        if (query) handleSearch(); else loadTrending();
       });
     }
 
@@ -592,7 +620,7 @@
         const email = currentUser.email || '';
         const initial = email.charAt(0).toUpperCase();
         navRight.innerHTML = `
-          <div class="user-pill">
+          <div class="user-pill" style="display:flex;">
             <div class="avatar">${initial}</div>
             ${email.split('@')[0]}
             <button class="btn-logout" onclick="handleLogout()">✕</button>
@@ -607,47 +635,48 @@
     async function handleLogout() {
       await sb.auth.signOut();
       showToast('Logged out!');
+      window.location.href = 'home.html';
     }
 
-    // ── LOAD WHICH MOVIE IDs THE USER ALREADY SAVED ──
     async function loadUserWatchlistIds() {
       if (!currentUser) return;
       const { data, error } = await sb
         .from('watchlist')
         .select('movie_id')
         .eq('user_id', currentUser.id);
-      if (!error && data) {
-        userWatchlistIds = new Set(data.map(r => r.movie_id));
+      if (error) {
+        console.error(error);
+        return;
       }
+      userWatchlistIds = new Set((data || []).map(r => r.movie_id));
     }
 
-    // ── ADD TO WATCHLIST (Supabase) ──
     async function addToWatchlist(item) {
       if (!currentUser) {
         showToast('Please log in to save to your watchlist!');
+        setTimeout(() => { window.location.href = 'login.html'; }, 800);
         return;
       }
-
       if (userWatchlistIds.has(item.id)) {
         showToast('Already in your watchlist!');
         return;
       }
 
-      const { error } = await sb.from('watchlist').insert({
-  user_id:     currentUser.id,
-  movie_id:    item.id,
-  title:       item.title,
-  poster:      item.poster || null,
-  tmdb_rating: String(item.rating), // ⭐ TMDB score goes here
-  rating:      null,                // ⭐ user rating (empty for now)
-  year:        String(item.year),
-  type:        item.type,
-  status:      'planning'
-});
+      const payload = {
+        user_id: currentUser.id,
+        movie_id: item.id,
+        title: item.title,
+        poster: item.poster || null,
+        rating: String(item.rating),
+        year: String(item.year || ''),
+        type: item.type,
+        status: 'planning'
+      };
 
+      const { error } = await sb.from('watchlist').insert(payload);
       if (error) {
         console.error(error);
-        showToast('Error saving — please try again.');
+        showToast(error.message || 'Error saving — please try again.');
         return;
       }
 
@@ -661,7 +690,6 @@
       showToast(`"${item.title}" added to watchlist!`);
     }
 
-    // ── FILTER ──
     function setFilter(filter, btn) {
       currentFilter = filter;
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -670,7 +698,6 @@
       if (query) handleSearch(); else loadTrending();
     }
 
-    // ── SEARCH ──
     function handleSearch() {
       const query = document.getElementById('searchInput').value.trim();
       if (!query) { loadTrending(); return; }
@@ -686,7 +713,10 @@
         const res  = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
         const data = await res.json();
         renderCards((data.results || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv'));
-      } catch { showEmpty(); }
+      } catch (e) {
+        console.error(e);
+        showEmpty();
+      }
     }
 
     async function searchMedia(query, type) {
@@ -695,10 +725,12 @@
         const res  = await fetch(`${BASE_URL}/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
         const data = await res.json();
         renderCards((data.results || []).map(r => ({ ...r, media_type: type })));
-      } catch { showEmpty(); }
+      } catch (e) {
+        console.error(e);
+        showEmpty();
+      }
     }
 
-    // ── TRENDING ──
     async function loadTrending() {
       document.getElementById('sectionTitle').innerHTML = 'Trending Now <span id="resultCount"></span>';
       showLoading();
@@ -707,41 +739,39 @@
         const res  = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
         const data = await res.json();
         renderCards(data.results || []);
-      } catch { showEmpty(); }
+      } catch (e) {
+        console.error(e);
+        showEmpty();
+      }
     }
 
-    // ── RENDER CARDS ──
     function renderCards(items) {
       hideLoading();
       const grid = document.getElementById('resultsGrid');
       if (!items.length) { showEmpty(); return; }
-
       document.getElementById('emptyState').style.display = 'none';
       const countEl = document.getElementById('resultCount');
       if (countEl) countEl.textContent = `— ${items.length} results`;
 
       grid.innerHTML = items.map(item => {
-        const title  = item.title || item.name || 'Unknown';
-        const year   = (item.release_date || item.first_air_date || '').slice(0, 4);
+        const title  = getDisplayTitle(item);
+        const year   = getDisplayYear(item);
         const rating = item.vote_average ? item.vote_average.toFixed(1) : '?';
-        const type   = item.media_type === 'tv' ? 'TV' : 'Movie';
+        const mediaType = getMediaType(item);
+        const typeLabel = mediaType === 'tv' ? 'TV' : 'Movie';
         const poster = item.poster_path
           ? `<img src="${IMG_URL}${item.poster_path}" alt="${title}" loading="lazy"/>`
           : `<div class="placeholder">🎬</div>`;
 
         const inList = userWatchlistIds.has(item.id);
-
-        const wlItem = {
-          id: item.id, title, year, rating,
-          type: item.media_type,
-          poster: item.poster_path
-        };
+        const wlItem = { id: item.id, title, year, rating, type: mediaType, poster: item.poster_path };
+        const payload = encodeURIComponent(JSON.stringify(wlItem));
 
         return `
-          <div class="card">
+          <div class="card" onclick=\"openMedia('${mediaType}', ${item.id}, null)\">
             <div class="card-poster">
               ${poster}
-              <div class="card-badge">${type}</div>
+              <div class="card-badge">${typeLabel}</div>
               <div class="card-rating">★ ${rating}</div>
             </div>
             <div class="card-info">
@@ -751,24 +781,21 @@
                 <button
                   id="wl-btn-${item.id}"
                   class="card-btn ${inList ? 'added' : 'primary'}"
-                  onclick='addToWatchlist(${JSON.stringify(wlItem)})'
+                  onclick="event.stopPropagation(); addToWatchlist(JSON.parse(decodeURIComponent('${payload}')));"
                 >${inList ? '✓ Added' : '+ Watchlist'}</button>
-                <button class="card-btn" onclick="window.location.href='watchlist.html'">My List</button>
+                <button class="card-btn" onclick="event.stopPropagation(); window.location.href='watchlist.html'">My List</button>
               </div>
             </div>
           </div>`;
       }).join('');
     }
 
-    // ── UI STATES ──
     function showLoading() {
       document.getElementById('loading').style.display = 'block';
       document.getElementById('resultsGrid').innerHTML = '';
       document.getElementById('emptyState').style.display = 'none';
     }
-
     function hideLoading() { document.getElementById('loading').style.display = 'none'; }
-
     function showEmpty() {
       hideLoading();
       document.getElementById('emptyState').style.display = 'block';
@@ -799,14 +826,92 @@
       }, 2500);
     }
 
-    // ── ENTER KEY ──
     document.getElementById('searchInput').addEventListener('keydown', e => {
       if (e.key === 'Enter') handleSearch();
     });
 
-    // ── INIT ──
-    initAuth().then(() => loadTrending());
+    restoreSessionFromHash().then(() => initAuth()).then(() => loadTrending());
+  
+    // ── MODAL ──
+    let modalCurrentItem = null;
+
+    async function openMedia(type, id, wlItem) {
+      modalCurrentItem = wlItem || null;
+      document.getElementById('mediaModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      document.getElementById('modalTitle').textContent    = '...';
+      document.getElementById('modalOverview').textContent = 'Loading...';
+      document.getElementById('modalBackdrop').style.backgroundImage = '';
+      document.getElementById('modalGenres').innerHTML = '';
+
+      try {
+        const res  = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}`);
+        const data = await res.json();
+        const title    = data.title || data.name || 'Unknown';
+        const year     = (data.release_date || data.first_air_date || '').slice(0,4);
+        const rating   = data.vote_average ? data.vote_average.toFixed(1) : '?';
+        const backdrop = data.backdrop_path ? `https://image.tmdb.org/t/p/w780${data.backdrop_path}` : '';
+
+        document.getElementById('modalTitle').textContent    = title;
+        document.getElementById('modalOverview').textContent = data.overview || 'No description available.';
+        document.getElementById('modalBadge').textContent    = type === 'tv' ? 'TV Show' : 'Movie';
+        document.getElementById('modalRating').textContent   = `★ ${rating}`;
+        document.getElementById('modalYear').textContent     = year;
+        if (backdrop) document.getElementById('modalBackdrop').style.backgroundImage = `url(${backdrop})`;
+
+        const genres = (data.genres || []).slice(0,4);
+        document.getElementById('modalGenres').innerHTML = genres.map(g =>
+          `<span style="background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:3px 10px;border-radius:99px;">${g.name}</span>`
+        ).join('');
+
+        if (!modalCurrentItem) {
+          modalCurrentItem = { id: data.id, title, year, rating, type, poster: data.poster_path };
+        }
+        const btn = document.getElementById('modalWlBtn');
+        btn.textContent = userWatchlistIds.has(data.id) ? '✓ In Watchlist' : '+ Watchlist';
+        btn.disabled    = userWatchlistIds.has(data.id);
+      } catch(e) {
+        document.getElementById('modalOverview').textContent = 'Could not load details.';
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('mediaModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function modalAddToWatchlist() {
+      if (modalCurrentItem) addToWatchlist(modalCurrentItem);
+    }
+
+    document.getElementById('mediaModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
   </script>
+
+
+  <!-- ── MEDIA MODAL ── -->
+  <div id="mediaModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);overflow-y:auto;">
+    <div style="max-width:700px;margin:40px auto;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative;">
+      <button onclick="closeModal()" style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.6);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;z-index:10;">✕</button>
+      <div id="modalBackdrop" style="width:100%;height:220px;background:var(--bg);background-size:cover;background-position:center;"></div>
+      <div style="padding:24px;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <span id="modalBadge" style="background:var(--accent);color:white;font-size:10px;font-weight:600;padding:3px 10px;border-radius:4px;letter-spacing:1px;text-transform:uppercase;"></span>
+          <span id="modalRating" style="background:rgba(0,0,0,0.5);color:var(--accent2);font-size:12px;padding:3px 10px;border-radius:4px;border:1px solid var(--border);"></span>
+          <span id="modalYear" style="color:var(--muted);font-size:13px;padding:3px 6px;"></span>
+        </div>
+        <div id="modalTitle" style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;margin-bottom:10px;line-height:1;"></div>
+        <div id="modalGenres" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+        <div id="modalOverview" style="color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:20px;"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="modalWlBtn" style="background:var(--accent);border:none;color:white;padding:10px 22px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;" onclick="modalAddToWatchlist()">+ Watchlist</button>
+          <button onclick="closeModal()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:10px 22px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </body>
 </html>

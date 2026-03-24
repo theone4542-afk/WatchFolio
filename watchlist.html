@@ -328,8 +328,8 @@
       <li><a href="profile.html">Profile</a></li>
     </ul>
     <div class="nav-right" id="navRight">
-      <button class="btn-login" onclick="window.location.href='login.html'">Log in</button>
-      <button class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>
+      <button id="navLogin" class="btn-login" onclick="window.location.href='login.html'">Log in</button>
+      <button id="navSignup" class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>
     </div>
   </nav>
 
@@ -414,6 +414,16 @@
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    async function restoreSessionFromHash() {
+      const hash = window.location.hash.startsWith('#') ? new URLSearchParams(window.location.hash.slice(1)) : null;
+      if (!hash) return;
+      const access_token = hash.get('access_token');
+      const refresh_token = hash.get('refresh_token');
+      if (!access_token || !refresh_token) return;
+      const { error } = await sb.auth.setSession({ access_token, refresh_token });
+      if (!error) history.replaceState({}, document.title, window.location.pathname);
+    }
+
     const IMG_URL     = 'https://image.tmdb.org/t/p/w300';
     let currentFilter = 'all';
     let currentSort   = 'newest';
@@ -447,8 +457,8 @@
           </div>`;
       } else {
         navRight.innerHTML = `
-          <button class="btn-login" onclick="window.location.href='login.html'">Log in</button>
-          <button class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>`;
+          <button id="navLogin" class="btn-login" onclick="window.location.href='login.html'">Log in</button>
+          <button id="navSignup" class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>`;
       }
     }
 
@@ -665,7 +675,7 @@
       setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    initAuth();
+    restoreSessionFromHash().then(() => initAuth());
   </script>
 </body>
 </html>

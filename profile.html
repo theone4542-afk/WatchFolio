@@ -193,7 +193,7 @@
     <ul class="nav-links">
       <li><a href="home.html">Home</a></li>
       <li><a href="index.html">Search</a></li>
-      <li><a href="#">Watchlist</a></li>
+      <li><a href="watchlist.html">Watchlist</a></li>
       <li><a href="profile.html" style="color: var(--text);">Profile</a></li>
     </ul>
     <div class="nav-right">
@@ -209,7 +209,7 @@
       <div class="empty-icon">🔐</div>
       <h2>You're not logged in</h2>
       <p>Log in or create an account to view your profile and watchlist.</p>
-      <a href="auth.html">Log In / Sign Up</a>
+      <a href="login.html">Log In</a>
     </div>
 
     <!-- LOGGED IN STATE -->
@@ -246,7 +246,7 @@
       <div class="profile-section">
         <div class="profile-section-header">
           <div class="profile-section-title">My Watchlist</div>
-          <a href="#" class="see-all">See all →</a>
+          <a href="watchlist.html" class="see-all">See all →</a>
         </div>
         <div class="empty-watchlist">
           <div class="empty-icon">🎬</div>
@@ -262,29 +262,32 @@
     Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB
   </footer>
 
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL      = 'https://uuudwramzdijxsekljbp.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dWR3cmFtemRpanhzZWtsamJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTg2NTAsImV4cCI6MjA4OTc3NDY1MH0.l_wEz20wGZUlmfqSXTx73ctJnfSU02QWe7Yf5r-_tT4';
-    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL      = 'https://vhnbulihurzpzdzdivlc.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_OzoDhNIRlJhfvLiZYs3myg_hJNTxyPq';
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function loadProfile() {
       const { data: { session } } = await _supabase.auth.getSession();
+      const navLogin = document.getElementById('navLogin');
+      const navSignup = document.getElementById('navSignup');
 
       if (!session) {
         document.getElementById('notLoggedIn').classList.remove('hidden');
-        document.getElementById('navLogin').style.display = 'none';
-        document.getElementById('navSignup').style.display = 'none';
+        document.getElementById('loggedIn').classList.add('hidden');
+        if (navLogin) navLogin.style.display = 'inline-block';
+        if (navSignup) navSignup.style.display = 'inline-block';
         return;
       }
 
       const user = session.user;
-      document.getElementById('loggedIn').classList.remove('hidden');
-      document.getElementById('navLogin').style.display = 'none';
-      document.getElementById('navSignup').style.display = 'none';
+      if (navLogin) navLogin.style.display = 'none';
+      if (navSignup) navSignup.style.display = 'none';
       document.getElementById('notLoggedIn').classList.add('hidden');
+      document.getElementById('loggedIn').classList.remove('hidden');
 
-      // fill in profile info
       const username = user.user_metadata?.username || user.email.split('@')[0];
       const initial  = username.charAt(0).toUpperCase();
       const joined   = new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -293,6 +296,59 @@
       document.getElementById('profileName').textContent   = username;
       document.getElementById('profileEmail').textContent  = user.email;
       document.getElementById('profileJoined').textContent = joined;
+
+      const { data, error } = await _supabase
+        .from('watchlist')
+        .select('id,title,year,status,rating,poster,type,added_at')
+        .eq('user_id', user.id)
+        .order('added_at', { ascending: false });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const items = data || [];
+      document.getElementById('statWatchlist').textContent = items.length;
+      document.getElementById('statWatched').textContent = items.filter(i => i.status === 'completed').length;
+      document.getElementById('statRated').textContent = items.filter(i => parseFloat(i.rating) > 0).length;
+
+      const section = document.querySelector('.profile-section');
+      const preview = items.slice(0, 4);
+      if (!items.length) {
+        section.innerHTML = `
+          <div class="profile-section-header">
+            <div class="profile-section-title">My Watchlist</div>
+            <a href="watchlist.html" class="see-all">See all →</a>
+          </div>
+          <div class="empty-watchlist">
+            <div class="empty-icon">🎬</div>
+            <p>Your watchlist is empty.</p>
+            <a href="index.html">Browse movies</a>
+          </div>`;
+        return;
+      }
+
+      const IMG_URL = 'https://image.tmdb.org/t/p/w300';
+      section.innerHTML = `
+        <div class="profile-section-header">
+          <div class="profile-section-title">My Watchlist</div>
+          <a href="watchlist.html" class="see-all">See all →</a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;">
+          ${preview.map(item => `
+            <a href="watchlist.html" style="text-decoration:none;color:inherit;">
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+                <div style="aspect-ratio:2/3;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                  ${item.poster ? `<img src="${IMG_URL}${item.poster}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;display:block;">` : '🎬'}
+                </div>
+                <div style="padding:10px;">
+                  <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.title}</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px;">${item.year || ''}</div>
+                </div>
+              </div>
+            </a>`).join('')}
+        </div>`;
     }
 
     async function handleLogout() {
@@ -302,6 +358,7 @@
 
     loadProfile();
   </script>
+
 
 </body>
 </html>

@@ -228,7 +228,7 @@
     <ul class="nav-links">
       <li><a href="home.html" class="active">Home</a></li>
       <li><a href="index.html">Search</a></li>
-      <li><a href="#">Watchlist</a></li>
+      <li><a href="watchlist.html">Watchlist</a></li>
       <li><a href="profile.html">Profile</a></li>
     </ul>
     <div class="nav-right">
@@ -253,7 +253,7 @@
       <div class="banner-overview" id="bannerOverview"></div>
       <div class="banner-actions">
         <button class="banner-btn-primary" onclick="location.href='index.html'">🔍 Find Similar</button>
-        <button class="banner-btn-ghost">+ Watchlist</button>
+        <button class="banner-btn-ghost" id="bannerWatchlistBtn">+ Watchlist</button>
       </div>
     </div>
     <div class="banner-dots" id="bannerDots"></div>
@@ -312,27 +312,132 @@
     Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB
   </footer>
 
+  
+<!-- ── MEDIA MODAL ── -->
+  <div id="mediaModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);overflow-y:auto;">
+    <div style="max-width:700px;margin:40px auto;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative;">
+      <button onclick="closeModal()" style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.6);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;z-index:10;">✕</button>
+      <div id="modalBackdrop" style="width:100%;height:220px;background:var(--bg);background-size:cover;background-position:center;"></div>
+      <div style="padding:24px;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+          <span id="modalBadge" style="background:var(--accent);color:white;font-size:10px;font-weight:600;padding:3px 10px;border-radius:4px;letter-spacing:1px;text-transform:uppercase;"></span>
+          <span id="modalRating" style="background:rgba(0,0,0,0.5);color:var(--accent2);font-size:12px;padding:3px 10px;border-radius:4px;border:1px solid var(--border);"></span>
+          <span id="modalYear" style="color:var(--muted);font-size:13px;padding:3px 6px;"></span>
+        </div>
+        <div id="modalTitle" style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;margin-bottom:10px;line-height:1;"></div>
+        <div id="modalGenres" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+        <div id="modalOverview" style="color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:20px;"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button id="modalWlBtn" style="background:var(--accent);border:none;color:white;padding:10px 22px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;" onclick="modalAddToWatchlist()">+ Watchlist</button>
+          <button onclick="closeModal()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:10px 22px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">Close</button>
+        </div>
+      </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const API_KEY  = '12c07491ff5d8b932fe25c2d554dddbf';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMG_URL  = 'https://image.tmdb.org/t/p/w300';
     const BG_URL   = 'https://image.tmdb.org/t/p/w1280';
-
-    const _supabase = window.supabase.createClient(
-      'https://uuudwramzdijxsekljbp.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1dWR3cmFtemRpanhzZWtsamJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxOTg2NTAsImV4cCI6MjA4OTc3NDY1MH0.l_wEz20wGZUlmfqSXTx73ctJnfSU02QWe7Yf5r-_tT4'
-    );
+    const SUPABASE_URL = 'https://vhnbulihurzpzdzdivlc.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_OzoDhNIRlJhfvLiZYs3myg_hJNTxyPq';
+    const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let featuredMovies = [], currentBanner = 0, bannerTimer;
+    let currentUser = null;
+    let userWatchlistIds = new Set();
+
+
+    async function initAuth() {
+      const { data: { session } } = await _supabase.auth.getSession();
+      currentUser = session?.user ?? null;
+      updateNavAuth();
+      if (currentUser) await loadUserWatchlistIds();
+
+      _supabase.auth.onAuthStateChange(async (_event, session) => {
+        currentUser = session?.user ?? null;
+        updateNavAuth();
+        if (currentUser) await loadUserWatchlistIds(); else userWatchlistIds.clear();
+        if (featuredMovies.length) showBanner(currentBanner);
+        loadTrending();
+      });
+    }
+
+    function updateNavAuth() {
+      const navRight = document.querySelector('.nav-right');
+      if (!navRight) return;
+      if (currentUser) {
+        const email = currentUser.email || '';
+        const initial = email.charAt(0).toUpperCase();
+        navRight.innerHTML = `
+          <div class="user-pill" style="display:flex;">
+            <div class="avatar">${initial}</div>
+            ${email.split('@')[0]}
+            <button class="btn-logout" onclick="handleLogout()">✕</button>
+          </div>`;
+      } else {
+        navRight.innerHTML = `
+          <button class="btn-login" id="navLogin" onclick="location.href='login.html'">Log in</button>
+          <button class="btn-signup" id="navSignup" onclick="location.href='signup.html'">Sign up</button>`;
+      }
+    }
+
+    async function handleLogout() {
+      await _supabase.auth.signOut();
+      location.href = 'home.html';
+    }
+
+    async function loadUserWatchlistIds() {
+      if (!currentUser) return;
+      const { data, error } = await _supabase.from('watchlist').select('movie_id').eq('user_id', currentUser.id);
+      if (!error) userWatchlistIds = new Set((data || []).map(r => r.movie_id));
+    }
+
+    async function addToWatchlist(item) {
+      if (!currentUser) {
+        showToast('Please log in to save to your watchlist!');
+        setTimeout(() => location.href='login.html', 800);
+        return;
+      }
+      if (userWatchlistIds.has(item.id)) {
+        showToast('Already in your watchlist!');
+        return;
+      }
+      const { error } = await _supabase.from('watchlist').insert({
+        user_id: currentUser.id,
+        movie_id: item.id,
+        title: item.title,
+        poster: item.poster || null,
+        rating: String(item.rating),
+        year: String(item.year || ''),
+        type: item.type,
+        status: 'planning'
+      });
+      if (error) {
+        console.error(error);
+        showToast(error.message || 'Error saving — please try again.');
+        return;
+      }
+      userWatchlistIds.add(item.id);
+      const btn = document.getElementById('wl-btn-' + item.id);
+      if (btn) btn.textContent = '✓ Added';
+      showToast(`"${item.title}" added to watchlist!`);
+    }
 
     async function loadFeatured() {
       try {
         const res  = await fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}`);
         const data = await res.json();
         featuredMovies = (data.results || []).filter(m => m.backdrop_path).slice(0, 5);
-        if (featuredMovies.length) { buildDots(); showBanner(0); bannerTimer = setInterval(() => { currentBanner = (currentBanner + 1) % featuredMovies.length; showBanner(currentBanner); }, 6000); }
-      } catch (e) { document.getElementById('bannerSkeleton').style.display = 'none'; }
+        if (featuredMovies.length) {
+          buildDots();
+          showBanner(0);
+          bannerTimer = setInterval(() => { currentBanner = (currentBanner + 1) % featuredMovies.length; showBanner(currentBanner); }, 6000);
+        }
+      } catch (e) {
+        console.error(e);
+        document.getElementById('bannerSkeleton').style.display = 'none';
+      }
     }
 
     function buildDots() {
@@ -355,13 +460,30 @@
       const bg = document.getElementById('bannerBg');
       bg.classList.remove('loaded');
       const img = new Image();
-      img.onload = () => { bg.style.backgroundImage = `url(${BG_URL}${movie.backdrop_path})`; bg.classList.add('loaded'); document.getElementById('bannerSkeleton').style.display = 'none'; };
+      img.onload = () => {
+        bg.style.backgroundImage = `url(${BG_URL}${movie.backdrop_path})`;
+        bg.classList.add('loaded');
+        document.getElementById('bannerSkeleton').style.display = 'none';
+      };
       img.src = `${BG_URL}${movie.backdrop_path}`;
       document.getElementById('bannerTitle').textContent    = movie.title || movie.name || 'Unknown';
       document.getElementById('bannerRating').textContent   = movie.vote_average ? `★ ${movie.vote_average.toFixed(1)}` : '';
       document.getElementById('bannerYear').textContent     = (movie.release_date || movie.first_air_date || '').slice(0, 4);
       document.getElementById('bannerType').textContent     = movie.media_type === 'tv' ? 'TV Show' : 'Movie';
       document.getElementById('bannerOverview').textContent = movie.overview || '';
+      const bannerBtn = document.getElementById('bannerWatchlistBtn');
+      const item = {
+        id: movie.id,
+        title: movie.title || movie.name || 'Unknown',
+        year: (movie.release_date || movie.first_air_date || '').slice(0,4),
+        rating: movie.vote_average ? movie.vote_average.toFixed(1) : '?',
+        type: movie.media_type === 'tv' ? 'tv' : 'movie',
+        poster: movie.poster_path
+      };
+      if (bannerBtn) {
+        bannerBtn.textContent = userWatchlistIds.has(item.id) ? '✓ Added' : '+ Watchlist';
+        bannerBtn.onclick = () => addToWatchlist(item);
+      }
     }
 
     function filterGenre(e, btn, genreId) {
@@ -378,7 +500,10 @@
         const res = await fetch(`${BASE_URL}/trending/all/week?api_key=${API_KEY}`);
         const data = await res.json();
         renderCards(data.results || []);
-      } catch (e) { showEmpty(); }
+      } catch (e) {
+        console.error(e);
+        showEmpty();
+      }
     }
 
     async function loadByGenre(genreId) {
@@ -387,7 +512,10 @@
         const res = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&sort_by=popularity.desc`);
         const data = await res.json();
         renderCards((data.results || []).map(r => ({ ...r, media_type: 'movie' })));
-      } catch (e) { showEmpty(); }
+      } catch (e) {
+        console.error(e);
+        showEmpty();
+      }
     }
 
     function renderCards(items) {
@@ -401,27 +529,92 @@
         const year   = (item.release_date || item.first_air_date || '').slice(0, 4);
         const rating = item.vote_average ? item.vote_average.toFixed(1) : '?';
         const type   = item.media_type === 'tv' ? 'TV' : 'Movie';
+        const mediaType = item.media_type === 'tv' ? 'tv' : 'movie';
         const poster = item.poster_path ? `<img src="${IMG_URL}${item.poster_path}" alt="${title}" loading="lazy"/>` : `<div class="placeholder">🎬</div>`;
-        return `<div class="card"><div class="card-poster">${poster}<div class="card-badge">${type}</div><div class="card-rating">★ ${rating}</div></div><div class="card-info"><div class="card-title">${title}</div><div class="card-meta">${year}</div><div class="card-actions"><button class="card-btn primary">+ Watchlist</button><button class="card-btn">Rate</button></div></div></div>`;
+        const wlItem = { id:item.id, title, year, rating, type: mediaType, poster: item.poster_path };
+        const payload = encodeURIComponent(JSON.stringify(wlItem));
+        const inList = userWatchlistIds.has(item.id);
+        return `<div class="card" onclick="openMedia('${mediaType}', ${item.id}, ${JSON.stringify(wlItem).replace(/"/g, '&quot;')})"><div class="card-poster">${poster}<div class="card-badge">${type}</div><div class="card-rating">★ ${rating}</div></div><div class="card-info"><div class="card-title">${title}</div><div class="card-meta">${year}</div><div class="card-actions"><button id="wl-btn-${item.id}" class="card-btn primary" onclick="event.stopPropagation(); addToWatchlist(JSON.parse(decodeURIComponent('${payload}')))">${inList ? '✓ Added' : '+ Watchlist'}</button><button class="card-btn" onclick="event.stopPropagation(); openMedia('${mediaType}', ${item.id}, null)">Details</button></div></div></div>`;
       }).join('');
     }
 
     function showLoading() { document.getElementById('loading').style.display = 'block'; document.getElementById('resultsGrid').innerHTML = ''; document.getElementById('empty').style.display = 'none'; }
     function hideLoading() { document.getElementById('loading').style.display = 'none'; }
     function showEmpty()   { hideLoading(); document.getElementById('empty').style.display = 'block'; document.getElementById('resultsGrid').innerHTML = ''; }
-
-    // ── INIT ──
-    loadFeatured();
-    loadTrending();
-
-    // ── HIDE NAV BUTTONS IF LOGGED IN ──
-    _supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        document.getElementById('navLogin').style.display = 'none';
-        document.getElementById('navSignup').style.display = 'none';
+    function showToast(msg) {
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = 'position:fixed;bottom:28px;right:28px;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);color:var(--text);padding:12px 20px;border-radius:8px;font-size:13px;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none;z-index:999;';
+        document.body.appendChild(toast);
       }
+      toast.textContent = msg;
+      toast.style.opacity = '1'; toast.style.transform = 'translateY(0)';
+      setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)'; }, 2500);
+    }
+
+    initAuth().then(() => { loadFeatured(); loadTrending(); });
+  
+    // ── MODAL ──
+    let modalCurrentItem = null;
+
+    async function openMedia(type, id, wlItem) {
+      modalCurrentItem = wlItem || null;
+      document.getElementById('mediaModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      document.getElementById('modalTitle').textContent    = '...';
+      document.getElementById('modalOverview').textContent = 'Loading...';
+      document.getElementById('modalBackdrop').style.backgroundImage = '';
+      document.getElementById('modalGenres').innerHTML = '';
+
+      try {
+        const res  = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}`);
+        const data = await res.json();
+        const title    = data.title || data.name || 'Unknown';
+        const year     = (data.release_date || data.first_air_date || '').slice(0,4);
+        const rating   = data.vote_average ? data.vote_average.toFixed(1) : '?';
+        const backdrop = data.backdrop_path ? `https://image.tmdb.org/t/p/w780${data.backdrop_path}` : '';
+
+        document.getElementById('modalTitle').textContent    = title;
+        document.getElementById('modalOverview').textContent = data.overview || 'No description available.';
+        document.getElementById('modalBadge').textContent    = type === 'tv' ? 'TV Show' : 'Movie';
+        document.getElementById('modalRating').textContent   = `★ ${rating}`;
+        document.getElementById('modalYear').textContent     = year;
+        if (backdrop) document.getElementById('modalBackdrop').style.backgroundImage = `url(${backdrop})`;
+
+        const genres = (data.genres || []).slice(0,4);
+        document.getElementById('modalGenres').innerHTML = genres.map(g =>
+          `<span style="background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:3px 10px;border-radius:99px;">${g.name}</span>`
+        ).join('');
+
+        if (!modalCurrentItem) {
+          modalCurrentItem = { id: data.id, title, year, rating, type, poster: data.poster_path };
+        }
+        const btn = document.getElementById('modalWlBtn');
+        btn.textContent = userWatchlistIds.has(data.id) ? '✓ In Watchlist' : '+ Watchlist';
+        btn.disabled    = userWatchlistIds.has(data.id);
+      } catch(e) {
+        document.getElementById('modalOverview').textContent = 'Could not load details.';
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('mediaModal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    function modalAddToWatchlist() {
+      if (modalCurrentItem) addToWatchlist(modalCurrentItem);
+    }
+
+    document.getElementById('mediaModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
     });
+
   </script>
+    </div>
+  </div>
 
 </body>
 </html>
