@@ -7,466 +7,105 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .theme-picker{display:flex;gap:6px;align-items:center}
+    .theme-dot{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0;transition:transform .15s}
+    .theme-dot:hover{transform:scale(1.2)}
+    .theme-dot.active{border-color:white;transform:scale(1.15)}
+    .hamburger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;padding:4px}
+    .hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px}
+    .mobile-menu{display:none;position:fixed;top:68px;left:0;right:0;background:rgba(10,10,15,.98);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:16px 20px;z-index:99;flex-direction:column;gap:4px}
+    .mobile-menu.open{display:flex}
+    .mobile-menu a{color:var(--muted);text-decoration:none;font-size:15px;font-weight:500;padding:10px 0;border-bottom:1px solid var(--border)}
+    .mobile-menu a:hover,.mobile-menu a.active{color:var(--text)}
+    .mobile-menu-auth{display:flex;gap:8px;margin-top:12px}
+    .search-tabs{display:flex;justify-content:center;gap:0;margin:0 auto 24px;max-width:400px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px}
+    .search-tab{flex:1;background:none;border:none;color:var(--muted);padding:9px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+    .search-tab.active{background:var(--accent);color:white}
+    .hero{text-align:center;padding:60px 20px 36px}
+    .hero-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+    .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,8vw,88px);letter-spacing:4px;line-height:.95;margin-bottom:20px}
+    .hero h1 em{font-style:normal;color:var(--accent)}
+    .hero p{color:var(--muted);font-size:15px;max-width:440px;margin:0 auto 32px;line-height:1.7}
 
-    :root {
-      --bg: #0a0a0f;
-      --surface: #13131a;
-      --border: #1e1e2e;
-      --accent: #e63946;
-      --accent2: #f4a261;
-      --text: #f0eee8;
-      --muted: #6b6880;
-      --card-bg: #111118;
+    /* ── SEARCH BAR — fixed filter button overlap ── */
+    .search-wrap{max-width:680px;margin:0 auto 16px;position:relative}
+    .search-wrap input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;padding:18px 155px 18px 24px;border-radius:10px;outline:none;transition:border-color .2s;box-sizing:border-box}
+    .search-wrap input::placeholder{color:var(--muted)}
+    .search-wrap input:focus{border-color:var(--accent)}
+    .search-actions{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:6px;align-items:center;z-index:2}
+    .btn-filter-toggle{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:0 12px;height:36px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;z-index:2;position:relative}
+    .btn-filter-toggle:hover,.btn-filter-toggle.active{border-color:var(--accent);color:var(--accent)}
+    .btn-search{background:var(--accent);border:none;color:white;width:36px;height:36px;border-radius:7px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:2;position:relative}
+    .btn-search:hover{opacity:.85}
+
+    .filter-panel{max-width:680px;margin:0 auto 24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;display:none}
+    .filter-panel.open{display:block}
+    .filter-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:12px}
+    .filter-group{display:flex;flex-direction:column;gap:6px}
+    .filter-group label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+    .filter-group select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;cursor:pointer;width:100%}
+    .filter-group select option{background:var(--surface)}
+    .filter-type-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .type-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 16px;border-radius:99px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+    .type-btn.active{background:var(--accent);border-color:var(--accent);color:white}
+    .filter-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
+    .btn-reset{background:none;border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer}
+    .btn-apply{background:var(--accent);border:none;color:white;padding:8px 20px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
+    .section{max-width:1200px;margin:0 auto;padding:40px 24px}
+    .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+    .section-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px}
+    .section-title span{color:var(--accent);font-size:14px;font-family:'DM Sans',sans-serif;letter-spacing:0;margin-left:10px;font-weight:400}
+    .see-all{font-size:13px;color:var(--muted);text-decoration:none;border-bottom:1px solid var(--border);padding-bottom:2px}
+    .see-all:hover{color:var(--accent)}
+
+    /* ── CARDS ── */
+    .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:18px}
+    .card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:transform .2s,border-color .2s;position:relative}
+    .card:hover{transform:translateY(-4px);border-color:var(--accent)}
+    .card-poster{width:100%;aspect-ratio:2/3;background:var(--surface);position:relative;overflow:hidden}
+    .card-poster img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+    .card:hover .card-poster img{transform:scale(1.05)}
+    .card-poster .placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--border)}
+    .card-badge{position:absolute;top:8px;left:8px;background:var(--accent);color:white;font-size:10px;font-weight:500;padding:3px 8px;border-radius:4px;letter-spacing:.5px;text-transform:uppercase}
+    .card-rating{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);color:var(--accent2);font-size:11px;font-weight:500;padding:3px 7px;border-radius:4px}
+    .card-fav{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.6);border:none;color:rgba(255,255,255,.5);width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:2}
+    .card-fav:hover{background:rgba(0,0,0,.85);color:var(--accent);transform:scale(1.1)}
+    .card-fav.active{color:var(--accent)}
+    .card-info{padding:12px}
+    .card-title{font-size:13px;font-weight:500;line-height:1.4;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .card-meta{font-size:11px;color:var(--muted);margin-bottom:4px}
+    /* member avg rating on card */
+    .card-member-rating{font-size:11px;color:var(--accent2);margin-bottom:6px;display:none}
+    .card-member-rating.show{display:block}
+    .card-actions{display:flex;gap:6px;margin-top:6px}
+    .card-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:5px 0;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+    .card-btn:hover{border-color:var(--accent);color:var(--text)}
+    .card-btn.primary{background:rgba(230,57,70,.12);border-color:rgba(230,57,70,.3);color:var(--accent)}
+    .card-btn.added{background:rgba(40,200,120,.12);border-color:rgba(40,200,120,.3);color:#28c878}
+    .users-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+    .user-card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:transform .2s,border-color .2s;color:var(--text)}
+    .user-card:hover{transform:translateY(-3px);border-color:var(--accent)}
+    .user-avatar{width:60px;height:60px;border-radius:50%;background:var(--accent);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:white;flex-shrink:0}
+    .user-name{font-weight:600;font-size:14px;text-align:center}
+    .user-bio{font-size:12px;color:var(--muted);text-align:center}
+    .btn-follow-sm{background:var(--accent);border:none;color:white;padding:6px 16px;border-radius:99px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer}
+    .btn-follow-sm.following{background:none;border:1px solid var(--border);color:var(--muted)}
+    .loading{text-align:center;padding:60px 20px;color:var(--muted);display:none}
+    .spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .empty{text-align:center;padding:80px 20px;color:var(--muted);display:none}
+    .empty-icon{font-size:48px;margin-bottom:16px}
+    .login-prompt{display:none;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:12px 20px;font-size:13px;color:var(--muted);margin-bottom:20px;text-align:center}
+    .login-prompt a{color:var(--accent);text-decoration:none}
+    footer{border-top:1px solid var(--border);padding:24px 40px;text-align:center;color:var(--muted);font-size:12px}
+    footer span{color:var(--accent)}
+    @media(max-width:768px){
+      nav{padding:14px 16px}.nav-links{display:none}.nav-right-wrap{display:none}.hamburger{display:flex}
+      .hero{padding:40px 16px 28px}.search-wrap input{padding:14px 110px 14px 16px;font-size:14px}
+      .filter-panel{margin:0 16px 20px}.filter-row{grid-template-columns:repeat(2,1fr)}
+      .section{padding:28px 16px}.results-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+      .users-grid{grid-template-columns:repeat(2,1fr)}.footer{padding:20px 16px}.theme-picker{display:none}
     }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-    }
-
-    /* ── NAVBAR ── */
-    nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 40px;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      background: rgba(10,10,15,0.92);
-      backdrop-filter: blur(12px);
-      z-index: 100;
-    }
-
-    .logo {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 28px;
-      letter-spacing: 2px;
-      color: var(--text);
-      text-decoration: none;
-    }
-
-    .logo span { color: var(--accent); }
-
-    .nav-links {
-      display: flex;
-      gap: 32px;
-      list-style: none;
-    }
-
-    .nav-links a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: 0.5px;
-      transition: color 0.2s;
-    }
-
-    .nav-links a:hover { color: var(--text); }
-    .nav-links a.active { color: var(--text); }
-
-    .nav-right {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .btn-login {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 8px 18px;
-      border-radius: 6px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-login:hover { border-color: var(--accent); color: var(--text); }
-
-    .btn-signup {
-      background: var(--accent);
-      border: none;
-      color: white;
-      padding: 8px 18px;
-      border-radius: 6px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.2s;
-    }
-
-    .btn-signup:hover { opacity: 0.85; }
-
-    /* ── USER PILL (shown when logged in) ── */
-    .user-pill {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 99px;
-      padding: 6px 14px 6px 8px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    .user-pill .avatar {
-      width: 24px; height: 24px;
-      background: var(--accent);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; color: white; font-weight: 600;
-    }
-
-    .btn-logout {
-      background: none; border: none;
-      color: var(--muted); font-size: 12px;
-      cursor: pointer; padding: 0; margin-left: 4px;
-      transition: color 0.2s;
-    }
-    .btn-logout:hover { color: var(--accent); }
-
-    /* ── HERO / SEARCH SECTION ── */
-    .hero {
-      text-align: center;
-      padding: 80px 20px 48px;
-    }
-
-    .hero-label {
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 16px;
-    }
-
-    .hero h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(52px, 8vw, 96px);
-      letter-spacing: 4px;
-      line-height: 0.95;
-      margin-bottom: 20px;
-    }
-
-    .hero h1 em {
-      font-style: normal;
-      color: var(--accent);
-    }
-
-    .hero p {
-      color: var(--muted);
-      font-size: 15px;
-      max-width: 440px;
-      margin: 0 auto 40px;
-      line-height: 1.7;
-    }
-
-    /* ── SEARCH BAR ── */
-    .search-wrap {
-      max-width: 620px;
-      margin: 0 auto;
-      position: relative;
-    }
-
-    .search-wrap input {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 16px;
-      padding: 18px 60px 18px 24px;
-      border-radius: 10px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .search-wrap input::placeholder { color: var(--muted); }
-    .search-wrap input:focus { border-color: var(--accent); }
-
-    .search-wrap button {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--accent);
-      border: none;
-      color: white;
-      width: 42px;
-      height: 42px;
-      border-radius: 7px;
-      cursor: pointer;
-      font-size: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.2s;
-    }
-
-    .search-wrap button:hover { opacity: 0.85; }
-
-    /* ── FILTER TABS ── */
-    .filters {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 20px;
-      flex-wrap: wrap;
-    }
-
-    .filter-btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 7px 20px;
-      border-radius: 99px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .filter-btn:hover,
-    .filter-btn.active {
-      border-color: var(--accent);
-      color: var(--text);
-      background: rgba(230,57,70,0.08);
-    }
-
-    /* ── SECTION TITLE ── */
-    .section {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 48px 24px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 28px;
-    }
-
-    .section-title {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 28px;
-      letter-spacing: 2px;
-    }
-
-    .section-title span {
-      color: var(--accent);
-      font-size: 14px;
-      font-family: 'DM Sans', sans-serif;
-      letter-spacing: 0;
-      margin-left: 10px;
-      font-weight: 400;
-    }
-
-    .see-all {
-      font-size: 13px;
-      color: var(--muted);
-      text-decoration: none;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 2px;
-      transition: color 0.2s;
-    }
-
-    .see-all:hover { color: var(--accent); }
-
-    /* ── RESULTS GRID ── */
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 20px;
-    }
-
-    /* ── MOVIE CARD ── */
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.2s, border-color 0.2s;
-      position: relative;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      border-color: var(--accent);
-    }
-
-    .card-poster {
-      width: 100%;
-      aspect-ratio: 2/3;
-      background: var(--surface);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card-poster img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform 0.3s;
-    }
-
-    .card:hover .card-poster img { transform: scale(1.05); }
-
-    .card-poster .placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 40px;
-      color: var(--border);
-    }
-
-    .card-badge {
-      position: absolute;
-      top: 8px;
-      left: 8px;
-      background: var(--accent);
-      color: white;
-      font-size: 10px;
-      font-weight: 500;
-      padding: 3px 8px;
-      border-radius: 4px;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .card-rating {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      background: rgba(0,0,0,0.75);
-      color: var(--accent2);
-      font-size: 11px;
-      font-weight: 500;
-      padding: 3px 7px;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      gap: 3px;
-    }
-
-    .card-info { padding: 12px; }
-
-    .card-title {
-      font-size: 13px;
-      font-weight: 500;
-      line-height: 1.4;
-      margin-bottom: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .card-meta { font-size: 11px; color: var(--muted); }
-
-    .card-actions {
-      display: flex;
-      gap: 6px;
-      margin-top: 10px;
-    }
-
-    .card-btn {
-      flex: 1;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 11px;
-      padding: 5px 0;
-      border-radius: 5px;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif;
-      transition: all 0.2s;
-    }
-
-    .card-btn:hover { border-color: var(--accent); color: var(--text); }
-
-    .card-btn.primary {
-      background: rgba(230,57,70,0.12);
-      border-color: rgba(230,57,70,0.3);
-      color: var(--accent);
-    }
-
-    .card-btn.primary:hover {
-      background: rgba(230,57,70,0.2);
-    }
-
-    .card-btn.added {
-      background: rgba(40,200,120,0.12);
-      border-color: rgba(40,200,120,0.3);
-      color: #28c878;
-    }
-
-    /* ── LOADING STATE ── */
-    .loading {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--muted);
-      display: none;
-    }
-
-    .spinner {
-      width: 32px;
-      height: 32px;
-      border: 2px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      margin: 0 auto 16px;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── EMPTY STATE ── */
-    .empty {
-      text-align: center;
-      padding: 80px 20px;
-      color: var(--muted);
-      display: none;
-    }
-
-    .empty-icon { font-size: 48px; margin-bottom: 16px; }
-
-    /* ── LOGIN PROMPT ── */
-    .login-prompt {
-      display: none;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      border-radius: 8px;
-      padding: 12px 20px;
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    .login-prompt a { color: var(--accent); text-decoration: none; }
-
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 24px 40px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    footer span { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -479,439 +118,370 @@
       <li><a href="watchlist.html">Watchlist</a></li>
       <li><a href="profile.html">Profile</a></li>
     </ul>
-    <div class="nav-right" id="navRight">
-      <!-- swapped by JS based on auth state -->
-      <button class="btn-login" onclick="window.location.href='login.html'">Log in</button>
-      <button class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>
+    <div class="nav-right-wrap" style="display:flex;align-items:center;gap:12px;">
+      <div class="theme-picker" id="themePicker"></div>
+      <div id="navRight" style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-login" onclick="location.href='login.html'">Log in</button>
+        <button class="btn-signup" onclick="location.href='signup.html'">Sign up</button>
+      </div>
     </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
 
-  <!-- HERO + SEARCH -->
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="home.html">Home</a>
+    <a href="index.html" class="active">Search</a>
+    <a href="watchlist.html">Watchlist</a>
+    <a href="profile.html">Profile</a>
+    <div class="mobile-menu-auth" id="mobileAuth">
+      <button class="btn-login" style="flex:1" onclick="location.href='login.html'">Log in</button>
+      <button class="btn-signup" style="flex:1" onclick="location.href='signup.html'">Sign up</button>
+    </div>
+  </div>
+
   <section class="hero">
     <p class="hero-label">Your personal cinema</p>
     <h1>Find Your<br/><em>Next Watch</em></h1>
-    <p>Search millions of movies and TV shows. Track what you've seen, rate what you loved.</p>
-
+    <p>Search millions of movies, TV shows and members.</p>
+    <div class="search-tabs">
+      <button class="search-tab active" onclick="switchSearchMode('media',this)">🎬 Movies & Shows</button>
+      <button class="search-tab" onclick="switchSearchMode('users',this)">👥 Members</button>
+    </div>
     <div class="search-wrap">
       <input type="text" id="searchInput" placeholder="Search movies, TV shows..." autocomplete="off"/>
-      <button onclick="handleSearch()">&#9906;</button>
+      <div class="search-actions">
+        <button class="btn-filter-toggle" id="filterToggle" onclick="toggleFilterPanel()">⚙ Filters</button>
+        <button class="btn-search" onclick="handleSearch()">⚲</button>
+      </div>
     </div>
-
-    <div class="filters">
-      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
-      <button class="filter-btn" onclick="setFilter('movie', this)">Movies</button>
-      <button class="filter-btn" onclick="setFilter('tv', this)">TV Shows</button>
+    <div class="filter-panel" id="filterPanel">
+      <div class="filter-type-row">
+        <button class="type-btn active" onclick="setType('all',this)">All</button>
+        <button class="type-btn" onclick="setType('movie',this)">Movies</button>
+        <button class="type-btn" onclick="setType('tv',this)">TV Shows</button>
+      </div>
+      <div class="filter-row">
+        <div class="filter-group"><label>Sort By</label>
+          <select id="fSort"><option value="popularity.desc">Most Popular</option><option value="vote_average.desc">Highest Rated</option><option value="primary_release_date.desc">Newest First</option><option value="primary_release_date.asc">Oldest First</option></select>
+        </div>
+        <div class="filter-group"><label>Year</label><select id="fYear"><option value="">Any Year</option></select></div>
+        <div class="filter-group"><label>Language</label>
+          <select id="fLang"><option value="">Any Language</option><option value="en">English</option><option value="hi">Hindi</option><option value="ja">Japanese</option><option value="ko">Korean</option><option value="fr">French</option><option value="es">Spanish</option><option value="de">German</option><option value="zh">Chinese</option><option value="it">Italian</option><option value="pt">Portuguese</option></select>
+        </div>
+        <div class="filter-group"><label>Genre</label>
+          <select id="fGenre"><option value="">Any Genre</option><option value="28">Action</option><option value="12">Adventure</option><option value="16">Animation</option><option value="35">Comedy</option><option value="80">Crime</option><option value="99">Documentary</option><option value="18">Drama</option><option value="14">Fantasy</option><option value="27">Horror</option><option value="9648">Mystery</option><option value="10749">Romance</option><option value="878">Sci-Fi</option><option value="53">Thriller</option><option value="10752">War</option></select>
+        </div>
+        <div class="filter-group"><label>Min Rating</label>
+          <select id="fRating"><option value="">Any Rating</option><option value="9">9+</option><option value="8">8+</option><option value="7">7+</option><option value="6">6+</option><option value="5">5+</option></select>
+        </div>
+        <div class="filter-group"><label>Country</label>
+          <select id="fCountry"><option value="">Any Country</option><option value="US">USA</option><option value="GB">UK</option><option value="IN">India</option><option value="JP">Japan</option><option value="KR">South Korea</option><option value="FR">France</option><option value="DE">Germany</option><option value="IT">Italy</option><option value="ES">Spain</option><option value="CN">China</option><option value="AU">Australia</option></select>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn-reset" onclick="resetFilters()">Reset</button>
+        <button class="btn-apply" onclick="applyFilters()">Apply Filters</button>
+      </div>
     </div>
   </section>
 
-  <!-- RESULTS SECTION -->
   <div class="section">
     <div class="section-header">
-      <div class="section-title" id="sectionTitle">
-        Trending Now <span id="resultCount"></span>
-      </div>
+      <div class="section-title" id="sectionTitle">Trending Now <span id="resultCount"></span></div>
       <a href="watchlist.html" class="see-all">My Watchlist →</a>
     </div>
-
-    <div class="login-prompt" id="loginPrompt">
-      🔒 <a href="login.html">Log in</a> or <a href="signup.html">sign up</a> to save titles to your watchlist.
-    </div>
-
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <p>Searching...</p>
-    </div>
-
-    <div class="empty" id="emptyState">
-      <div class="empty-icon">🎬</div>
-      <p>No results found. Try a different title.</p>
-    </div>
-
+    <div class="login-prompt" id="loginPrompt">🔒 <a href="login.html">Log in</a> or <a href="signup.html">sign up</a> to save titles.</div>
+    <div class="loading" id="loading"><div class="spinner"></div><p>Searching...</p></div>
+    <div class="empty" id="emptyState"><div class="empty-icon">🎬</div><p>No results found.</p></div>
     <div class="results-grid" id="resultsGrid"></div>
+    <div class="users-grid" id="usersGrid" style="display:none"></div>
   </div>
 
-  <footer>
-    Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB
-  </footer>
+  <footer>Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB</footer>
 
-  <!-- ── SUPABASE ── -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="wl.js"></script>
   <script>
-    // ════════════════════════════════════════════
-    // 🔧 PASTE YOUR CREDENTIALS HERE
-    // ════════════════════════════════════════════
-    const SUPABASE_URL = 'https://vhnbulihurzpzdzdivlc.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_OzoDhNIRlJhfvLiZYs3myg_hJNTxyPq';
-    // ════════════════════════════════════════════
-
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // ── TMDB CONFIG ──
     const API_KEY  = '12c07491ff5d8b932fe25c2d554dddbf';
     const BASE_URL = 'https://api.themoviedb.org/3';
     const IMG_URL  = 'https://image.tmdb.org/t/p/w300';
+    let currentFilter='all', currentUser=null, searchMode='media', followingIds=new Set(), currentUsername='';
 
-    let currentFilter = 'all';
-    let currentUser   = null;
-    let userWatchlistIds = new Set();
+    const yearSel=document.getElementById('fYear');
+    for(let y=new Date().getFullYear();y>=1950;y--){const o=document.createElement('option');o.value=y;o.textContent=y;yearSel.appendChild(o);}
 
-    async function restoreSessionFromHash() {
-      const hash = window.location.hash.startsWith('#')
-        ? new URLSearchParams(window.location.hash.slice(1))
-        : null;
-      if (!hash) return;
-      const access_token = hash.get('access_token');
-      const refresh_token = hash.get('refresh_token');
-      if (!access_token || !refresh_token) return;
-      const { error } = await sb.auth.setSession({ access_token, refresh_token });
-      if (error) {
-        console.error('Session restore failed:', error);
-        return;
-      }
-      history.replaceState({}, document.title, window.location.pathname);
+    async function restoreSessionFromHash(){
+      const h=window.location.hash.startsWith('#')?new URLSearchParams(window.location.hash.slice(1)):null;
+      if(!h) return;
+      const at=h.get('access_token'),rt=h.get('refresh_token');
+      if(at&&rt){await _wlDb.auth.setSession({access_token:at,refresh_token:rt});history.replaceState({},document.title,window.location.pathname);}
     }
 
-    function getDisplayTitle(item) {
-      return item.title || item.name || 'Unknown';
-    }
-
-    function getDisplayYear(item) {
-      return (item.release_date || item.first_air_date || '').slice(0, 4);
-    }
-
-    function getMediaType(item) {
-      return item.media_type === 'tv' ? 'tv' : 'movie';
-    }
-
-    // openMedia replaced by modal/${id}`, '_blank', 'noopener');
-    
-
-    async function initAuth() {
-      const { data: { session } } = await sb.auth.getSession();
-      currentUser = session?.user ?? null;
-      updateNavAuth();
-
-      if (currentUser) {
-        await loadUserWatchlistIds();
-        document.getElementById('loginPrompt').style.display = 'none';
+    async function initAuth(){
+      currentUser=await wlInit();
+      wlRenderThemePicker('themePicker');
+      if(currentUser){
+        const{data}=await _wlDb.from('profiles').select('username').eq('id',currentUser.id).single();
+        currentUsername=data?.username||currentUser.email.split('@')[0];
+        document.getElementById('loginPrompt').style.display='none';
+        await loadFollowingIds();
       } else {
-        document.getElementById('loginPrompt').style.display = 'block';
+        document.getElementById('loginPrompt').style.display='block';
       }
-
-      sb.auth.onAuthStateChange(async (_event, session) => {
-        currentUser = session?.user ?? null;
-        updateNavAuth();
-        if (currentUser) {
-          await loadUserWatchlistIds();
-          document.getElementById('loginPrompt').style.display = 'none';
+      updateNavAuth();
+      _wlDb.auth.onAuthStateChange(async(_e,session)=>{
+        currentUser=session?.user??null;
+        if(currentUser){
+          const{data}=await _wlDb.from('profiles').select('username').eq('id',currentUser.id).single();
+          currentUsername=data?.username||currentUser.email.split('@')[0];
+          document.getElementById('loginPrompt').style.display='none';
+          await loadFollowingIds();
         } else {
-          userWatchlistIds.clear();
-          document.getElementById('loginPrompt').style.display = 'block';
+          document.getElementById('loginPrompt').style.display='block';
+          followingIds.clear();
         }
-        const query = document.getElementById('searchInput').value.trim();
-        if (query) handleSearch(); else loadTrending();
+        updateNavAuth();
+        const q=document.getElementById('searchInput').value.trim();
+        if(q) handleSearch(); else loadTrending();
       });
     }
 
-    function updateNavAuth() {
-      const navRight = document.getElementById('navRight');
-      if (currentUser) {
-        const email = currentUser.email || '';
-        const initial = email.charAt(0).toUpperCase();
-        navRight.innerHTML = `
-          <div class="user-pill" style="display:flex;">
-            <div class="avatar">${initial}</div>
-            ${email.split('@')[0]}
-            <button class="btn-logout" onclick="handleLogout()">✕</button>
-          </div>`;
+    function updateNavAuth(){
+      const nr=document.getElementById('navRight');
+      const ma=document.getElementById('mobileAuth');
+      if(currentUser){
+        const i=currentUsername.charAt(0).toUpperCase();
+        nr.innerHTML=`<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">${i}</div><span style="font-size:13px;color:var(--muted)">${currentUsername}</span><button class="btn-login" onclick="handleLogout()">Log Out</button></div>`;
+        ma.innerHTML=`<button class="btn-login" style="flex:1" onclick="handleLogout()">Log Out</button>`;
       } else {
-        navRight.innerHTML = `
-          <button class="btn-login" onclick="window.location.href='login.html'">Log in</button>
-          <button class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>`;
+        nr.innerHTML=`<button class="btn-login" onclick="location.href='login.html'">Log in</button><button class="btn-signup" onclick="location.href='signup.html'">Sign up</button>`;
+        ma.innerHTML=`<button class="btn-login" style="flex:1" onclick="location.href='login.html'">Log in</button><button class="btn-signup" style="flex:1" onclick="location.href='signup.html'">Sign up</button>`;
       }
     }
 
-    async function handleLogout() {
-      await sb.auth.signOut();
-      showToast('Logged out!');
-      window.location.href = 'home.html';
+    async function handleLogout(){await _wlDb.auth.signOut();location.reload();}
+
+    async function loadFollowingIds(){
+      if(!currentUser) return;
+      const{data}=await _wlDb.from('follows').select('following_id').eq('follower_id',currentUser.id);
+      followingIds=new Set((data||[]).map(r=>r.following_id));
     }
 
-    async function loadUserWatchlistIds() {
-      if (!currentUser) return;
-      const { data, error } = await sb
-        .from('watchlist')
-        .select('movie_id')
-        .eq('user_id', currentUser.id);
-      if (error) {
-        console.error(error);
-        return;
-      }
-      userWatchlistIds = new Set((data || []).map(r => r.movie_id));
-    }
+    function toggleMobileMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
 
-    async function addToWatchlist(item) {
-      if (!currentUser) {
-        showToast('Please log in to save to your watchlist!');
-        setTimeout(() => { window.location.href = 'login.html'; }, 800);
-        return;
-      }
-      if (userWatchlistIds.has(item.id)) {
-        showToast('Already in your watchlist!');
-        return;
-      }
-
-      const payload = {
-        user_id: currentUser.id,
-        movie_id: item.id,
-        title: item.title,
-        poster: item.poster || null,
-        rating: String(item.rating),
-        year: String(item.year || ''),
-        type: item.type,
-        status: 'planning'
-      };
-
-      const { error } = await sb.from('watchlist').insert(payload);
-      if (error) {
-        console.error(error);
-        showToast(error.message || 'Error saving — please try again.');
-        return;
-      }
-
-      userWatchlistIds.add(item.id);
-      const btn = document.getElementById('wl-btn-' + item.id);
-      if (btn) {
-        btn.textContent = '✓ Added';
-        btn.classList.remove('primary');
-        btn.classList.add('added');
-      }
-      showToast(`"${item.title}" added to watchlist!`);
-    }
-
-    function setFilter(filter, btn) {
-      currentFilter = filter;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    function switchSearchMode(mode,btn){
+      searchMode=mode;
+      document.querySelectorAll('.search-tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      const query = document.getElementById('searchInput').value.trim();
-      if (query) handleSearch(); else loadTrending();
-    }
-
-    function handleSearch() {
-      const query = document.getElementById('searchInput').value.trim();
-      if (!query) { loadTrending(); return; }
-      document.getElementById('sectionTitle').innerHTML = `Results for "${query}" <span id="resultCount"></span>`;
-      if (currentFilter === 'movie') searchMedia(query, 'movie');
-      else if (currentFilter === 'tv') searchMedia(query, 'tv');
-      else searchMulti(query);
-    }
-
-    async function searchMulti(query) {
-      showLoading();
-      try {
-        const res  = await fetch(`${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
-        const data = await res.json();
-        renderCards((data.results || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv'));
-      } catch (e) {
-        console.error(e);
+      const input=document.getElementById('searchInput');
+      const ft=document.getElementById('filterToggle');
+      const fp=document.getElementById('filterPanel');
+      if(mode==='users'){
+        input.placeholder='Search members by username...';
+        ft.style.display='none';fp.classList.remove('open');ft.classList.remove('active');
+        document.getElementById('resultsGrid').style.display='none';
+        document.getElementById('usersGrid').style.display='';
+        document.getElementById('sectionTitle').innerHTML='Find Members';
+        document.getElementById('resultCount').textContent='';
         showEmpty();
+      } else {
+        input.placeholder='Search movies, TV shows...';
+        ft.style.display='';
+        document.getElementById('resultsGrid').style.display='';
+        document.getElementById('usersGrid').style.display='none';
+        loadTrending();
       }
     }
 
-    async function searchMedia(query, type) {
+    function toggleFilterPanel(){document.getElementById('filterPanel').classList.toggle('open');document.getElementById('filterToggle').classList.toggle('active');}
+    function setType(type,btn){currentFilter=type;document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+    function resetFilters(){
+      ['fSort','fYear','fLang','fGenre','fRating','fCountry'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=id==='fSort'?'popularity.desc':'';});
+      currentFilter='all';document.querySelectorAll('.type-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+    }
+    function applyFilters(){
+      const q=document.getElementById('searchInput').value.trim();
+      if(q) handleSearch(); else loadDiscover();
+      document.getElementById('filterPanel').classList.remove('open');
+      document.getElementById('filterToggle').classList.remove('active');
+    }
+
+    function handleSearch(){
+      const q=document.getElementById('searchInput').value.trim();
+      if(searchMode==='users'){searchUsers(q);return;}
+      if(!q){loadTrending();return;}
+      document.getElementById('sectionTitle').innerHTML=`Results for "${q}" <span id="resultCount"></span>`;
+      if(currentFilter==='movie') searchMedia(q,'movie');
+      else if(currentFilter==='tv') searchMedia(q,'tv');
+      else searchMulti(q);
+    }
+
+    async function searchMulti(query){
       showLoading();
-      try {
-        const res  = await fetch(`${BASE_URL}/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
-        const data = await res.json();
-        renderCards((data.results || []).map(r => ({ ...r, media_type: type })));
-      } catch (e) {
-        console.error(e);
-        showEmpty();
+      try{
+        const[mr,tr]=await Promise.all([
+          fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`),
+          fetch(`${BASE_URL}/search/tv?api_key=${API_KEY}&query=${encodeURIComponent(query)}`)
+        ]);
+        const[md,td]=await Promise.all([mr.json(),tr.json()]);
+        const movies=(md.results||[]).map(r=>({...r,media_type:'movie'}));
+        const tv=(td.results||[]).map(r=>({...r,media_type:'tv'}));
+        const combined=[];const max=Math.max(movies.length,tv.length);
+        for(let i=0;i<max;i++){if(movies[i])combined.push(movies[i]);if(tv[i])combined.push(tv[i]);}
+        renderCards(combined.slice(0,40));
+      }catch(e){showEmpty();}
+    }
+
+    async function searchMedia(query,type){
+      showLoading();
+      try{
+        const res=await fetch(`${BASE_URL}/search/${type}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
+        const data=await res.json();
+        renderCards((data.results||[]).map(r=>({...r,media_type:type})));
+      }catch(e){showEmpty();}
+    }
+
+    async function loadTrending(){
+      document.getElementById('sectionTitle').innerHTML='Trending Now <span id="resultCount"></span>';
+      showLoading();
+      try{
+        const type=currentFilter==='tv'?'tv':currentFilter==='movie'?'movie':'all';
+        const res=await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
+        const data=await res.json();
+        renderCards(data.results||[]);
+      }catch(e){showEmpty();}
+    }
+
+    async function loadDiscover(){
+      showLoading();
+      document.getElementById('sectionTitle').innerHTML='Filtered Results <span id="resultCount"></span>';
+      const sort=document.getElementById('fSort').value,year=document.getElementById('fYear').value,
+        lang=document.getElementById('fLang').value,genre=document.getElementById('fGenre').value,
+        rating=document.getElementById('fRating').value,country=document.getElementById('fCountry').value;
+      const type=currentFilter==='tv'?'tv':'movie';
+      let url=`${BASE_URL}/discover/${type}?api_key=${API_KEY}&sort_by=${sort}`;
+      if(year) url+=`&primary_release_year=${year}`;if(lang) url+=`&with_original_language=${lang}`;
+      if(genre) url+=`&with_genres=${genre}`;if(rating) url+=`&vote_average.gte=${rating}`;
+      if(country) url+=`&with_origin_country=${country}`;
+      try{const res=await fetch(url);const data=await res.json();renderCards((data.results||[]).map(r=>({...r,media_type:type})));}
+      catch(e){showEmpty();}
+    }
+
+    async function searchUsers(query){
+      if(!query){document.getElementById('usersGrid').innerHTML='';showEmpty();return;}
+      showLoading();
+      document.getElementById('resultsGrid').style.display='none';
+      document.getElementById('usersGrid').style.display='';
+      document.getElementById('sectionTitle').innerHTML=`Members matching "${query}" <span id="resultCount"></span>`;
+      try{
+        const{data,error}=await _wlDb.from('profiles').select('id,username,avatar_url,bio').ilike('username',`%${query}%`).limit(20);
+        if(error||!data?.length){showEmpty();return;}
+        document.getElementById('resultCount').textContent=`— ${data.length} found`;
+        hideLoading();document.getElementById('emptyState').style.display='none';
+        document.getElementById('usersGrid').innerHTML=data.map(user=>{
+          const initial=(user.username||'?').charAt(0).toUpperCase();
+          const avatarStyle=user.avatar_url?`background-image:url(${user.avatar_url});background-size:cover;background-position:center;`:`background:var(--accent);`;
+          const isMe=currentUser&&user.id===currentUser.id;
+          const isFollowing=followingIds.has(user.id);
+          return `<div class="user-card" onclick="location.href='user-profile.html?id=${user.id}'">
+            <div class="user-avatar" style="${avatarStyle}">${user.avatar_url?'':initial}</div>
+            <div class="user-name">${user.username||'Unknown'}</div>
+            <div class="user-bio">${user.bio?user.bio.slice(0,50):'WatchFolio member'}</div>
+            ${isMe?'<span style="font-size:12px;color:var(--accent)">You</span>'
+              :`<button class="btn-follow-sm ${isFollowing?'following':''}" id="follow-btn-${user.id}"
+                  onclick="event.stopPropagation();toggleFollow('${user.id}',this)">
+                  ${isFollowing?'Following':'Follow'}
+                </button>`}
+          </div>`;
+        }).join('');
+      }catch(e){showEmpty();}
+    }
+
+    async function toggleFollow(userId,btn){
+      if(!currentUser){wlToast('Log in to follow!');return;}
+      const isFollowing=followingIds.has(userId);
+      if(isFollowing){
+        await _wlDb.from('follows').delete().eq('follower_id',currentUser.id).eq('following_id',userId);
+        followingIds.delete(userId);btn.textContent='Follow';btn.classList.remove('following');
+      } else {
+        await _wlDb.from('follows').insert({follower_id:currentUser.id,following_id:userId});
+        followingIds.add(userId);btn.textContent='Following';btn.classList.add('following');
       }
     }
 
-    async function loadTrending() {
-      document.getElementById('sectionTitle').innerHTML = 'Trending Now <span id="resultCount"></span>';
-      showLoading();
-      try {
-        const type = currentFilter === 'tv' ? 'tv' : currentFilter === 'movie' ? 'movie' : 'all';
-        const res  = await fetch(`${BASE_URL}/trending/${type}/week?api_key=${API_KEY}`);
-        const data = await res.json();
-        renderCards(data.results || []);
-      } catch (e) {
-        console.error(e);
-        showEmpty();
-      }
-    }
-
-    function renderCards(items) {
+    // ── RENDER CARDS with member avg rating ──
+    function renderCards(items){
       hideLoading();
-      const grid = document.getElementById('resultsGrid');
-      if (!items.length) { showEmpty(); return; }
-      document.getElementById('emptyState').style.display = 'none';
-      const countEl = document.getElementById('resultCount');
-      if (countEl) countEl.textContent = `— ${items.length} results`;
+      document.getElementById('resultsGrid').style.display='';
+      document.getElementById('usersGrid').style.display='none';
+      const grid=document.getElementById('resultsGrid');
+      if(!items.length){showEmpty();return;}
+      document.getElementById('emptyState').style.display='none';
+      const countEl=document.getElementById('resultCount');
+      if(countEl) countEl.textContent=`— ${items.length} results`;
 
-      grid.innerHTML = items.map(item => {
-        const title  = getDisplayTitle(item);
-        const year   = getDisplayYear(item);
-        const rating = item.vote_average ? item.vote_average.toFixed(1) : '?';
-        const mediaType = getMediaType(item);
-        const typeLabel = mediaType === 'tv' ? 'TV' : 'Movie';
-        const poster = item.poster_path
-          ? `<img src="${IMG_URL}${item.poster_path}" alt="${title}" loading="lazy"/>`
-          : `<div class="placeholder">🎬</div>`;
-
-        const inList = userWatchlistIds.has(item.id);
-        const wlItem = { id: item.id, title, year, rating, type: mediaType, poster: item.poster_path };
-        const payload = encodeURIComponent(JSON.stringify(wlItem));
-
+      grid.innerHTML=items.map(item=>{
+        const title =item.title||item.name||'Unknown';
+        const year  =(item.release_date||item.first_air_date||'').slice(0,4);
+        const rating=item.vote_average?item.vote_average.toFixed(1):'?';
+        const mType =item.media_type==='tv'?'tv':'movie';
+        const tLabel=mType==='tv'?'TV':'Movie';
+        const poster=item.poster_path?`<img src="${IMG_URL}${item.poster_path}" alt="${title}" loading="lazy"/>`:`<div class="placeholder">🎬</div>`;
+        const wlItem={id:item.id,title,year,tmdbRating:rating,type:mType,poster:item.poster_path};
+        const regId =wlRegister(wlItem);
+        const inList=wlIsInList(item.id);
+        const isFav =wlIsFav(item.id,mType);
         return `
-          <div class="card" onclick=\"openMedia('${mediaType}', ${item.id}, null)\">
+          <div class="card" onclick="wlOpenMedia('${mType}',${item.id},'${regId}')">
             <div class="card-poster">
               ${poster}
-              <div class="card-badge">${typeLabel}</div>
+              <div class="card-badge">${tLabel}</div>
               <div class="card-rating">★ ${rating}</div>
+              <button id="fav-btn-${item.id}" class="card-fav ${isFav?'active':''}"
+                onclick="event.stopPropagation();wlToggleFav('${regId}')" title="Favourite">❤</button>
             </div>
             <div class="card-info">
               <div class="card-title">${title}</div>
               <div class="card-meta">${year}</div>
+              <div class="card-member-rating" id="avg-${item.id}"></div>
               <div class="card-actions">
-                <button
-                  id="wl-btn-${item.id}"
-                  class="card-btn ${inList ? 'added' : 'primary'}"
-                  onclick="event.stopPropagation(); addToWatchlist(JSON.parse(decodeURIComponent('${payload}')));"
-                >${inList ? '✓ Added' : '+ Watchlist'}</button>
-                <button class="card-btn" onclick="event.stopPropagation(); window.location.href='watchlist.html'">My List</button>
+                <button id="wl-btn-${item.id}" class="card-btn ${inList?'added':'primary'}"
+                  onclick="event.stopPropagation();wlShowStatusPicker(this,'${regId}',event)">${inList?'✓':'+'}</button>
+                <button class="card-btn"
+                  onclick="event.stopPropagation();wlOpenMedia('${mType}',${item.id},'${regId}')">Details</button>
               </div>
             </div>
           </div>`;
       }).join('');
+
+      // load member avg ratings in background
+      loadMemberRatings(items);
     }
 
-    function showLoading() {
-      document.getElementById('loading').style.display = 'block';
-      document.getElementById('resultsGrid').innerHTML = '';
-      document.getElementById('emptyState').style.display = 'none';
-    }
-    function hideLoading() { document.getElementById('loading').style.display = 'none'; }
-    function showEmpty() {
-      hideLoading();
-      document.getElementById('emptyState').style.display = 'block';
-      document.getElementById('resultsGrid').innerHTML = '';
-    }
-
-    function showToast(msg) {
-      let toast = document.getElementById('toast');
-      if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast';
-        toast.style.cssText = `
-          position:fixed;bottom:28px;right:28px;
-          background:var(--surface);border:1px solid var(--border);
-          border-left:3px solid var(--accent);
-          color:var(--text);padding:12px 20px;border-radius:8px;
-          font-size:13px;opacity:0;transform:translateY(10px);
-          transition:all 0.3s;pointer-events:none;z-index:999;
-        `;
-        document.body.appendChild(toast);
-      }
-      toast.textContent = msg;
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-      }, 2500);
-    }
-
-    document.getElementById('searchInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') handleSearch();
-    });
-
-    restoreSessionFromHash().then(() => initAuth()).then(() => loadTrending());
-  
-    // ── MODAL ──
-    let modalCurrentItem = null;
-
-    async function openMedia(type, id, wlItem) {
-      modalCurrentItem = wlItem || null;
-      document.getElementById('mediaModal').style.display = 'block';
-      document.body.style.overflow = 'hidden';
-      document.getElementById('modalTitle').textContent    = '...';
-      document.getElementById('modalOverview').textContent = 'Loading...';
-      document.getElementById('modalBackdrop').style.backgroundImage = '';
-      document.getElementById('modalGenres').innerHTML = '';
-
+    async function loadMemberRatings(items){
+      const ids = items.map(i=>i.id);
       try {
-        const res  = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}`);
-        const data = await res.json();
-        const title    = data.title || data.name || 'Unknown';
-        const year     = (data.release_date || data.first_air_date || '').slice(0,4);
-        const rating   = data.vote_average ? data.vote_average.toFixed(1) : '?';
-        const backdrop = data.backdrop_path ? `https://image.tmdb.org/t/p/w780${data.backdrop_path}` : '';
-
-        document.getElementById('modalTitle').textContent    = title;
-        document.getElementById('modalOverview').textContent = data.overview || 'No description available.';
-        document.getElementById('modalBadge').textContent    = type === 'tv' ? 'TV Show' : 'Movie';
-        document.getElementById('modalRating').textContent   = `★ ${rating}`;
-        document.getElementById('modalYear').textContent     = year;
-        if (backdrop) document.getElementById('modalBackdrop').style.backgroundImage = `url(${backdrop})`;
-
-        const genres = (data.genres || []).slice(0,4);
-        document.getElementById('modalGenres').innerHTML = genres.map(g =>
-          `<span style="background:var(--bg);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:3px 10px;border-radius:99px;">${g.name}</span>`
-        ).join('');
-
-        if (!modalCurrentItem) {
-          modalCurrentItem = { id: data.id, title, year, rating, type, poster: data.poster_path };
-        }
-        const btn = document.getElementById('modalWlBtn');
-        btn.textContent = userWatchlistIds.has(data.id) ? '✓ In Watchlist' : '+ Watchlist';
-        btn.disabled    = userWatchlistIds.has(data.id);
-      } catch(e) {
-        document.getElementById('modalOverview').textContent = 'Could not load details.';
-      }
+        const { data } = await _wlDb.from('watchlist').select('movie_id,user_rating').in('movie_id', ids).not('user_rating','is',null);
+        if (!data?.length) return;
+        // group by movie_id
+        const map = {};
+        data.forEach(r=>{ if(!map[r.movie_id]) map[r.movie_id]=[]; map[r.movie_id].push(r.user_rating); });
+        Object.entries(map).forEach(([id, ratings])=>{
+          const avg = (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1);
+          const el  = document.getElementById('avg-'+id);
+          if (el) { el.textContent=`👥 ${avg}/10 (${ratings.length} member${ratings.length>1?'s':''})`; el.classList.add('show'); }
+        });
+      } catch(e) {}
     }
 
-    function closeModal() {
-      document.getElementById('mediaModal').style.display = 'none';
-      document.body.style.overflow = '';
-    }
+    function showLoading(){document.getElementById('loading').style.display='block';document.getElementById('resultsGrid').innerHTML='';document.getElementById('usersGrid').innerHTML='';document.getElementById('emptyState').style.display='none';}
+    function hideLoading(){document.getElementById('loading').style.display='none';}
+    function showEmpty(){hideLoading();document.getElementById('emptyState').style.display='block';}
 
-    function modalAddToWatchlist() {
-      if (modalCurrentItem) addToWatchlist(modalCurrentItem);
-    }
-
-    document.getElementById('mediaModal').addEventListener('click', function(e) {
-      if (e.target === this) closeModal();
-    });
-
+    document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')handleSearch();});
+    restoreSessionFromHash().then(()=>initAuth()).then(()=>loadTrending());
   </script>
-
-
-  <!-- ── MEDIA MODAL ── -->
-  <div id="mediaModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);overflow-y:auto;">
-    <div style="max-width:700px;margin:40px auto;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative;">
-      <button onclick="closeModal()" style="position:absolute;top:14px;right:14px;background:rgba(0,0,0,0.6);border:1px solid var(--border);color:var(--text);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;z-index:10;">✕</button>
-      <div id="modalBackdrop" style="width:100%;height:220px;background:var(--bg);background-size:cover;background-position:center;"></div>
-      <div style="padding:24px;">
-        <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-          <span id="modalBadge" style="background:var(--accent);color:white;font-size:10px;font-weight:600;padding:3px 10px;border-radius:4px;letter-spacing:1px;text-transform:uppercase;"></span>
-          <span id="modalRating" style="background:rgba(0,0,0,0.5);color:var(--accent2);font-size:12px;padding:3px 10px;border-radius:4px;border:1px solid var(--border);"></span>
-          <span id="modalYear" style="color:var(--muted);font-size:13px;padding:3px 6px;"></span>
-        </div>
-        <div id="modalTitle" style="font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;margin-bottom:10px;line-height:1;"></div>
-        <div id="modalGenres" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
-        <div id="modalOverview" style="color:var(--muted);font-size:14px;line-height:1.7;margin-bottom:20px;"></div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-          <button id="modalWlBtn" style="background:var(--accent);border:none;color:white;padding:10px 22px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;" onclick="modalAddToWatchlist()">+ Watchlist</button>
-          <button onclick="closeModal()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:10px 22px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>

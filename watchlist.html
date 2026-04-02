@@ -7,314 +7,72 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0a0a0f;
-      --surface: #13131a;
-      --border: #1e1e2e;
-      --accent: #e63946;
-      --accent2: #f4a261;
-      --text: #f0eee8;
-      --muted: #6b6880;
-      --card-bg: #111118;
-      --star-on: #f4a261;
-      --star-off: #2a2a3a;
+    .theme-picker{display:flex;gap:6px;align-items:center}
+    .theme-dot{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;flex-shrink:0;transition:transform .15s}
+    .theme-dot:hover{transform:scale(1.2)}.theme-dot.active{border-color:white;transform:scale(1.15)}
+    .hero{padding:60px 40px 32px;max-width:1200px;margin:0 auto}
+    .hero-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+    .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,6vw,72px);letter-spacing:3px;line-height:.95;margin-bottom:20px}
+    .hero h1 em{font-style:normal;color:var(--accent)}
+    .stats-bar{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:32px;max-width:750px}
+    .stat{flex:1;padding:14px 12px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:3px;text-align:center}
+    .stat:last-child{border-right:none}
+    .stat-value{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;color:var(--accent)}
+    .stat-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+    .controls{display:flex;align-items:center;justify-content:space-between;padding:0 40px 24px;max-width:1200px;margin:0 auto;flex-wrap:wrap;gap:12px}
+    .filter-tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .filter-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:7px 16px;border-radius:99px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+    .filter-btn.active,.filter-btn:hover{border-color:var(--accent);color:var(--text);background:rgba(230,57,70,.08)}
+    .sort-select{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;outline:none}
+    .section{max-width:1200px;margin:0 auto;padding:0 40px 60px}
+    .watchlist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:20px}
+    .card{background:var(--card-bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:transform .2s,border-color .2s;position:relative}
+    .card:hover{transform:translateY(-4px);border-color:var(--accent)}
+    .card-poster{width:100%;aspect-ratio:2/3;background:var(--surface);position:relative;overflow:hidden;cursor:pointer}
+    .card-poster img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+    .card:hover .card-poster img{transform:scale(1.05)}
+    .card-poster .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--border)}
+    .card-badge{position:absolute;top:8px;left:8px;background:var(--accent);color:white;font-size:10px;font-weight:500;padding:3px 8px;border-radius:4px;text-transform:uppercase}
+    .card-tmdb{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);color:var(--accent2);font-size:11px;padding:3px 7px;border-radius:4px}
+    .card-status-pill{position:absolute;bottom:8px;left:8px;font-size:9px;font-weight:600;padding:3px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.5px}
+    .status-watching{background:#3b82f6;color:white}.status-completed{background:#22c55e;color:white}
+    .status-planning{background:#6b7280;color:white}.status-rewatching{background:#a855f7;color:white}
+    .status-paused{background:#f97316;color:white}.status-dropped{background:#ef4444;color:white}
+    .card-info{padding:10px 12px}
+    .card-title{font-size:13px;font-weight:500;line-height:1.4;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .card-meta{font-size:11px;color:var(--muted);margin-bottom:8px}
+    .score-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+    .score-input{width:52px;background:var(--bg);border:1px solid var(--border);color:var(--accent2);padding:4px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color .2s}
+    .score-input:focus{border-color:var(--accent)}
+    .score-label{font-size:11px;color:var(--muted)}
+    .ep-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+    .ep-input{width:52px;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;outline:none}
+    .ep-input:focus{border-color:var(--accent)}
+    .ep-label{font-size:11px;color:var(--muted)}
+    .ep-max{font-size:10px;color:var(--muted)}
+    .status-select{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:6px 8px;border-radius:5px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;outline:none;margin-bottom:6px}
+    .status-select option{background:var(--surface)}
+    .card-actions{display:flex;gap:6px}
+    .card-btn{flex:1;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:5px 0;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+    .card-btn:hover{border-color:var(--accent);color:var(--text)}
+    .card-btn.danger:hover{background:rgba(239,68,68,.1);border-color:#ef4444;color:#ef4444}
+    .not-logged-in{display:none;text-align:center;padding:100px 20px}
+    .empty{text-align:center;padding:100px 20px;display:none}
+    .empty h2{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:10px}
+    .empty p{color:var(--muted);font-size:14px;margin-bottom:24px}
+    .btn-primary{display:inline-block;background:var(--accent);color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500}
+    .loading{text-align:center;padding:80px 20px;color:var(--muted);display:none}
+    .spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    footer{border-top:1px solid var(--border);padding:24px 40px;text-align:center;color:var(--muted);font-size:12px}
+    footer span{color:var(--accent)}
+    @media(max-width:768px){
+      nav{padding:14px 16px}.nav-links{display:none}.hero{padding:40px 16px 24px}
+      .controls{padding:0 16px 20px}.section{padding:0 16px 40px}
+      .watchlist-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+      .stats-bar{flex-wrap:wrap}.stat{min-width:33%}
+      .theme-picker{display:none}
     }
-
-    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
-
-    /* ── NAV ── */
-    nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 40px; border-bottom: 1px solid var(--border);
-      position: sticky; top: 0;
-      background: rgba(10,10,15,0.92);
-      backdrop-filter: blur(12px); z-index: 100;
-    }
-
-    .logo {
-      font-family: 'Bebas Neue', sans-serif; font-size: 28px;
-      letter-spacing: 2px; color: var(--text); text-decoration: none;
-    }
-
-    .logo span { color: var(--accent); }
-    .nav-links { display: flex; gap: 32px; list-style: none; }
-
-    .nav-links a {
-      color: var(--muted); text-decoration: none;
-      font-size: 14px; font-weight: 500; letter-spacing: 0.5px; transition: color 0.2s;
-    }
-
-    .nav-links a:hover { color: var(--text); }
-    .nav-links a.active { color: var(--text); }
-    .nav-right { display: flex; gap: 12px; align-items: center; }
-
-    .btn-login {
-      background: none; border: 1px solid var(--border); color: var(--muted);
-      padding: 8px 18px; border-radius: 6px; font-family: 'DM Sans', sans-serif;
-      font-size: 13px; cursor: pointer; transition: all 0.2s;
-    }
-
-    .btn-login:hover { border-color: var(--accent); color: var(--text); }
-
-    .btn-signup {
-      background: var(--accent); border: none; color: white;
-      padding: 8px 18px; border-radius: 6px; font-family: 'DM Sans', sans-serif;
-      font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s;
-    }
-
-    .btn-signup:hover { opacity: 0.85; }
-
-    .user-pill {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 99px; padding: 6px 14px 6px 8px;
-      font-size: 13px; color: var(--muted);
-    }
-
-    .user-pill .avatar {
-      width: 24px; height: 24px; background: var(--accent);
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 11px; color: white; font-weight: 600;
-    }
-
-    .btn-logout {
-      background: none; border: none; color: var(--muted); font-size: 12px;
-      cursor: pointer; padding: 0; margin-left: 4px; transition: color 0.2s;
-    }
-
-    .btn-logout:hover { color: var(--accent); }
-
-    /* ── HERO ── */
-    .hero { padding: 60px 40px 40px; max-width: 1200px; margin: 0 auto; }
-
-    .hero-label {
-      font-size: 11px; letter-spacing: 3px;
-      text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
-    }
-
-    .hero h1 {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(44px, 6vw, 72px);
-      letter-spacing: 3px; line-height: 0.95; margin-bottom: 16px;
-    }
-
-    .hero h1 em { font-style: normal; color: var(--accent); }
-
-    /* ── STATS BAR ── */
-    .stats-bar {
-      display: flex; gap: 0;
-      border: 1px solid var(--border); border-radius: 10px;
-      overflow: hidden; margin-bottom: 32px; max-width: 600px;
-    }
-
-    .stat {
-      flex: 1; padding: 14px 20px;
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; gap: 3px;
-    }
-
-    .stat:last-child { border-right: none; }
-
-    .stat-value {
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 28px; letter-spacing: 1px; color: var(--accent);
-    }
-
-    .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
-
-    /* ── CONTROLS ── */
-    .controls {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 40px 24px; max-width: 1200px; margin: 0 auto;
-      flex-wrap: wrap; gap: 12px;
-    }
-
-    .filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
-
-    .filter-btn {
-      background: none; border: 1px solid var(--border); color: var(--muted);
-      padding: 7px 20px; border-radius: 99px; font-family: 'DM Sans', sans-serif;
-      font-size: 13px; cursor: pointer; transition: all 0.2s;
-    }
-
-    .filter-btn:hover,
-    .filter-btn.active {
-      border-color: var(--accent); color: var(--text);
-      background: rgba(230,57,70,0.08);
-    }
-
-    .sort-select {
-      background: var(--surface); border: 1px solid var(--border);
-      color: var(--muted); padding: 7px 14px; border-radius: 8px;
-      font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; outline: none;
-    }
-
-    /* ── GRID ── */
-    .section { max-width: 1200px; margin: 0 auto; padding: 0 40px 60px; }
-
-    .watchlist-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-      gap: 20px;
-    }
-
-    /* ── CARD ── */
-    .card {
-      background: var(--card-bg); border: 1px solid var(--border);
-      border-radius: 10px; overflow: hidden;
-      transition: transform 0.2s, border-color 0.2s; position: relative;
-    }
-
-    .card:hover { transform: translateY(-4px); border-color: var(--accent); }
-
-    .card-poster {
-      width: 100%; aspect-ratio: 2/3;
-      background: var(--surface); position: relative; overflow: hidden;
-    }
-
-    .card-poster img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
-    .card:hover .card-poster img { transform: scale(1.05); }
-
-    .card-poster .no-img {
-      width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 40px; color: var(--border);
-    }
-
-    .card-badge {
-      position: absolute; top: 8px; left: 8px;
-      background: var(--accent); color: white;
-      font-size: 10px; font-weight: 500; padding: 3px 8px;
-      border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase;
-    }
-
-    .card-status {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 4px 8px; font-size: 10px; font-weight: 500;
-      text-align: center; letter-spacing: 0.5px; text-transform: uppercase;
-    }
-
-    .status-watching  { background: rgba(244,162,97,0.85);  color: #0a0a0f; }
-    .status-completed { background: rgba(40,200,120,0.85);  color: #0a0a0f; }
-    .status-planning  { background: rgba(100,130,255,0.85); color: #0a0a0f; }
-    .status-dropped   { background: rgba(150,150,150,0.7);  color: #0a0a0f; }
-
-    .card-info { padding: 12px; }
-
-    .card-title {
-      font-size: 13px; font-weight: 500; line-height: 1.4; margin-bottom: 4px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    .card-meta { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
-
-    /* ── STAR RATING ── */
-    .star-rating {
-      display: flex;
-      gap: 3px;
-      margin-bottom: 8px;
-      align-items: center;
-    }
-
-    .star {
-      font-size: 16px;
-      cursor: pointer;
-      color: var(--star-off);
-      transition: color 0.15s, transform 0.15s;
-      line-height: 1;
-      user-select: none;
-    }
-
-    .star.hovered { color: var(--star-on); transform: scale(1.2); }
-    .star.filled  { color: var(--star-on); }
-
-    .star-label {
-      font-size: 10px;
-      color: var(--muted);
-      margin-left: 4px;
-    }
-
-    .card-actions { display: flex; gap: 6px; }
-
-    .card-btn {
-      flex: 1; background: var(--surface); border: 1px solid var(--border);
-      color: var(--muted); font-size: 11px; padding: 5px 0; border-radius: 5px;
-      cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s;
-    }
-
-    .card-btn:hover { border-color: var(--accent); color: var(--text); }
-    .card-btn.danger:hover { background: rgba(230,57,70,0.1); color: var(--accent); }
-
-    .status-select {
-      width: 100%; background: var(--surface); border: 1px solid var(--border);
-      color: var(--muted); padding: 5px 8px; border-radius: 5px;
-      font-family: 'DM Sans', sans-serif; font-size: 11px;
-      cursor: pointer; outline: none; margin-bottom: 6px;
-    }
-
-    /* ── NOT LOGGED IN ── */
-    .not-logged-in { display: none; text-align: center; padding: 100px 20px; }
-    .not-logged-in .empty-icon { font-size: 56px; margin-bottom: 20px; }
-
-    .not-logged-in h2 {
-      font-family: 'Bebas Neue', sans-serif; font-size: 32px;
-      letter-spacing: 2px; margin-bottom: 10px;
-    }
-
-    .not-logged-in p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
-
-    /* ── EMPTY ── */
-    .empty { text-align: center; padding: 100px 20px; display: none; }
-    .empty-icon { font-size: 56px; margin-bottom: 20px; }
-
-    .empty h2 {
-      font-family: 'Bebas Neue', sans-serif; font-size: 32px;
-      letter-spacing: 2px; margin-bottom: 10px;
-    }
-
-    .empty p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
-
-    .btn-primary {
-      display: inline-block; background: var(--accent); color: white;
-      padding: 12px 28px; border-radius: 8px; text-decoration: none;
-      font-size: 14px; font-weight: 500; transition: opacity 0.2s;
-    }
-
-    .btn-primary:hover { opacity: 0.85; }
-
-    /* ── LOADING ── */
-    .loading { text-align: center; padding: 80px 20px; color: var(--muted); display: none; }
-
-    .spinner {
-      width: 32px; height: 32px;
-      border: 2px solid var(--border); border-top-color: var(--accent);
-      border-radius: 50%; animation: spin 0.7s linear infinite;
-      margin: 0 auto 16px;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── TOAST ── */
-    .toast {
-      position: fixed; bottom: 28px; right: 28px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-left: 3px solid var(--accent);
-      color: var(--text); padding: 12px 20px; border-radius: 8px;
-      font-size: 13px; opacity: 0; transform: translateY(10px);
-      transition: all 0.3s; pointer-events: none; z-index: 999;
-    }
-
-    .toast.show { opacity: 1; transform: translateY(0); }
-
-    /* ── FOOTER ── */
-    footer {
-      border-top: 1px solid var(--border); padding: 24px 40px;
-      text-align: center; color: var(--muted); font-size: 12px;
-    }
-
-    footer span { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -327,9 +85,12 @@
       <li><a href="watchlist.html" class="active">Watchlist</a></li>
       <li><a href="profile.html">Profile</a></li>
     </ul>
-    <div class="nav-right" id="navRight">
-      <button id="navLogin" class="btn-login" onclick="window.location.href='login.html'">Log in</button>
-      <button id="navSignup" class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="theme-picker" id="themePicker"></div>
+      <div id="navAuth" style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-login" onclick="location.href='login.html'">Log in</button>
+        <button class="btn-signup" onclick="location.href='signup.html'">Sign up</button>
+      </div>
     </div>
   </nav>
 
@@ -337,329 +98,236 @@
     <p class="hero-label">Your collection</p>
     <h1>My <em>Watchlist</em></h1>
     <div class="stats-bar">
-      <div class="stat">
-        <span class="stat-value" id="totalCount">0</span>
-        <span class="stat-label">Total</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value" id="watchingCount">0</span>
-        <span class="stat-label">Watching</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value" id="completedCount">0</span>
-        <span class="stat-label">Completed</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value" id="planningCount">0</span>
-        <span class="stat-label">Planning</span>
-      </div>
-      <div class="stat">
-        <span class="stat-value" id="droppedCount">0</span>
-        <span class="stat-label">Dropped</span>
-      </div>
+      <div class="stat"><span class="stat-value" id="totalCount">0</span><span class="stat-label">Total</span></div>
+      <div class="stat"><span class="stat-value" id="watchingCount">0</span><span class="stat-label">Watching</span></div>
+      <div class="stat"><span class="stat-value" id="completedCount">0</span><span class="stat-label">Completed</span></div>
+      <div class="stat"><span class="stat-value" id="planningCount">0</span><span class="stat-label">Planning</span></div>
+      <div class="stat"><span class="stat-value" id="droppedCount">0</span><span class="stat-label">Dropped</span></div>
+      <div class="stat"><span class="stat-value" id="pausedCount">0</span><span class="stat-label">Paused</span></div>
     </div>
   </div>
 
   <div class="controls">
     <div class="filter-tabs">
-      <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
-      <button class="filter-btn" onclick="setFilter('watching', this)">Watching</button>
-      <button class="filter-btn" onclick="setFilter('completed', this)">Completed</button>
-      <button class="filter-btn" onclick="setFilter('planning', this)">Planning</button>
-      <button class="filter-btn" onclick="setFilter('dropped', this)">Dropped</button>
+      <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" onclick="setFilter('watching',this)">Watching</button>
+      <button class="filter-btn" onclick="setFilter('completed',this)">Completed</button>
+      <button class="filter-btn" onclick="setFilter('planning',this)">Planning</button>
+      <button class="filter-btn" onclick="setFilter('rewatching',this)">Rewatching</button>
+      <button class="filter-btn" onclick="setFilter('paused',this)">Paused</button>
+      <button class="filter-btn" onclick="setFilter('dropped',this)">Dropped</button>
     </div>
-    <select class="sort-select" onchange="setSortAndRender(this.value)">
+    <select class="sort-select" onchange="currentSort=this.value;render()">
       <option value="newest">Newest first</option>
       <option value="oldest">Oldest first</option>
-      <option value="my_rating">My rating ↓</option>
+      <option value="score">My score ↓</option>
       <option value="title">A → Z</option>
     </select>
   </div>
 
   <div class="section">
-    <div class="not-logged-in" id="notLoggedIn">
-      <div class="empty-icon">🔒</div>
-      <h2>Sign In First</h2>
-      <p>Log in to see and manage your personal watchlist.</p>
-      <a href="login.html" class="btn-primary">Log In</a>
-    </div>
-
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <p>Loading your watchlist...</p>
-    </div>
-
-    <div class="empty" id="emptyState">
-      <div class="empty-icon">🎬</div>
-      <h2>Nothing here yet</h2>
-      <p>Go search for movies and shows and add them to your watchlist!</p>
-      <a href="index.html" class="btn-primary">Browse titles</a>
-    </div>
-
+    <div class="not-logged-in" id="notLoggedIn"><div style="font-size:56px;margin-bottom:20px">🔒</div><h2 style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:10px">Sign In First</h2><p style="color:var(--muted);font-size:14px;margin-bottom:24px">Log in to see your watchlist.</p><a href="login.html" class="btn-primary">Log In</a></div>
+    <div class="loading" id="loading"><div class="spinner"></div><p>Loading...</p></div>
+    <div class="empty" id="emptyState"><div style="font-size:56px;margin-bottom:20px">🎬</div><h2>Nothing here yet</h2><p>Search and add movies or shows!</p><a href="index.html" class="btn-primary">Browse titles</a></div>
     <div class="watchlist-grid" id="watchlistGrid"></div>
   </div>
 
   <footer>Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB</footer>
-  <div class="toast" id="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="wl.js"></script>
   <script>
-    // ════════════════════════════════════════════
-    // 🔧 YOUR CREDENTIALS
-    // ════════════════════════════════════════════
-    const SUPABASE_URL = 'https://vhnbulihurzpzdzdivlc.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_OzoDhNIRlJhfvLiZYs3myg_hJNTxyPq';
-    // ════════════════════════════════════════════
+    const IMG_URL  = 'https://image.tmdb.org/t/p/w300';
+    const TMDB_KEY = '12c07491ff5d8b932fe25c2d554dddbf';
+    const TMDB_URL = 'https://api.themoviedb.org/3';
+    const sb = window._wlSupabase;
 
-    const { createClient } = supabase;
-    const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    let currentFilter='all', currentSort='newest', currentUser=null, allItems=[];
+    // cache TMDB episode counts: { movieId: totalEpisodes }
+    const epCountCache = {};
 
-    async function restoreSessionFromHash() {
-      const hash = window.location.hash.startsWith('#') ? new URLSearchParams(window.location.hash.slice(1)) : null;
-      if (!hash) return;
-      const access_token = hash.get('access_token');
-      const refresh_token = hash.get('refresh_token');
-      if (!access_token || !refresh_token) return;
-      const { error } = await sb.auth.setSession({ access_token, refresh_token });
-      if (!error) history.replaceState({}, document.title, window.location.pathname);
+    async function restoreSessionFromHash(){
+      const h=window.location.hash.startsWith('#')?new URLSearchParams(window.location.hash.slice(1)):null;
+      if(!h) return;
+      const at=h.get('access_token'),rt=h.get('refresh_token');
+      if(at&&rt){await sb.auth.setSession({access_token:at,refresh_token:rt});history.replaceState({},document.title,window.location.pathname);}
     }
 
-    const IMG_URL     = 'https://image.tmdb.org/t/p/w300';
-    let currentFilter = 'all';
-    let currentSort   = 'newest';
-    let currentUser   = null;
-    let allItems      = [];
-
-    // ── AUTH ──
-    async function initAuth() {
-      const { data: { session } } = await sb.auth.getSession();
-      currentUser = session?.user ?? null;
-      updateNavAuth();
-      handleAuthState();
-
-      sb.auth.onAuthStateChange((_event, session) => {
-        currentUser = session?.user ?? null;
-        updateNavAuth();
-        handleAuthState();
+    async function initAuth(){
+      wlInitTheme(); wlRenderThemePicker('themePicker');
+      const{data:{session}}=await sb.auth.getSession();
+      currentUser=session?.user??null;
+      updateNav();
+      if(!currentUser){document.getElementById('notLoggedIn').style.display='block';return;}
+      await loadWatchlist();
+      sb.auth.onAuthStateChange((_e,session)=>{
+        currentUser=session?.user??null;updateNav();
+        if(currentUser) loadWatchlist(); else{document.getElementById('notLoggedIn').style.display='block';document.getElementById('watchlistGrid').innerHTML='';resetStats();}
       });
     }
 
-    function updateNavAuth() {
-      const navRight = document.getElementById('navRight');
-      if (currentUser) {
-        const email   = currentUser.email || '';
-        const initial = email.charAt(0).toUpperCase();
-        navRight.innerHTML = `
-          <div class="user-pill">
-            <div class="avatar">${initial}</div>
-            ${email.split('@')[0]}
-            <button class="btn-logout" onclick="handleLogout()">✕</button>
-          </div>`;
+    function updateNav(){
+      const nr=document.getElementById('navAuth');if(!nr) return;
+      if(currentUser){
+        const i=(currentUser.email||'?').charAt(0).toUpperCase();
+        nr.innerHTML=`<div style="display:flex;align-items:center;gap:10px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">${i}</div><button class="btn-login" onclick="handleLogout()">Log Out</button></div>`;
       } else {
-        navRight.innerHTML = `
-          <button id="navLogin" class="btn-login" onclick="window.location.href='login.html'">Log in</button>
-          <button id="navSignup" class="btn-signup" onclick="window.location.href='signup.html'">Sign up</button>`;
+        nr.innerHTML=`<button class="btn-login" onclick="location.href='login.html'">Log in</button><button class="btn-signup" onclick="location.href='signup.html'">Sign up</button>`;
       }
     }
+    async function handleLogout(){await sb.auth.signOut();location.reload();}
 
-    async function handleLogout() {
-      await sb.auth.signOut();
-      showToast('Logged out!');
-    }
-
-    function handleAuthState() {
-      if (!currentUser) {
-        document.getElementById('notLoggedIn').style.display  = 'block';
-        document.getElementById('loading').style.display      = 'none';
-        document.getElementById('emptyState').style.display   = 'none';
-        document.getElementById('watchlistGrid').innerHTML    = '';
-        resetStats();
-        return;
-      }
-      document.getElementById('notLoggedIn').style.display = 'none';
-      loadWatchlist();
-    }
-
-    // ── LOAD FROM SUPABASE ──
-    async function loadWatchlist() {
-      document.getElementById('loading').style.display    = 'block';
-      document.getElementById('emptyState').style.display = 'none';
-      document.getElementById('watchlistGrid').innerHTML  = '';
-
-      const { data, error } = await sb
-        .from('watchlist')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .order('added_at', { ascending: false });
-
-      document.getElementById('loading').style.display = 'none';
-
-      if (error) { console.error(error); showToast('Could not load watchlist.'); return; }
-      allItems = data || [];
+    async function loadWatchlist(){
+      document.getElementById('loading').style.display='block';
+      document.getElementById('emptyState').style.display='none';
+      document.getElementById('watchlistGrid').innerHTML='';
+      const{data,error}=await sb.from('watchlist').select('*').eq('user_id',currentUser.id).order('added_at',{ascending:false});
+      document.getElementById('loading').style.display='none';
+      if(error){wlToast('Could not load watchlist.');return;}
+      allItems=data||[];
+      // prefetch episode counts for TV shows
+      const tvItems=allItems.filter(i=>i.type==='tv');
+      await Promise.all(tvItems.map(async i=>{
+        if(!epCountCache[i.movie_id]){
+          try{
+            const r=await fetch(`${TMDB_URL}/tv/${i.movie_id}?api_key=${TMDB_KEY}`);
+            const d=await r.json();
+            epCountCache[i.movie_id]=d.number_of_episodes||null;
+          }catch(e){}
+        }
+      }));
+      document.getElementById('notLoggedIn').style.display='none';
       render();
     }
 
-    // ── UPDATE STATUS ──
-    async function updateStatus(rowId, status) {
-      const { error } = await sb
-        .from('watchlist')
-        .update({ status })
-        .eq('id', rowId)
-        .eq('user_id', currentUser.id);
+    async function updateStatus(rowId,status){
+      const item=allItems.find(i=>i.id===rowId);
+      const updates = { status };
 
-      if (error) { showToast('Error updating status.'); return; }
-      const item = allItems.find(i => i.id === rowId);
-      if (item) item.status = status;
+      // auto-fill episodes when completed
+      if (status==='completed' && item && item.type==='tv') {
+        const maxEp = epCountCache[item.movie_id] || null;
+        if (maxEp) {
+          updates.episode_progress = maxEp;
+          item.episode_progress = maxEp;
+          // update input visually
+          const epInput = document.getElementById('ep-input-'+rowId);
+          if (epInput) epInput.value = maxEp;
+        }
+      }
+
+      const{error}=await sb.from('watchlist').update(updates).eq('id',rowId).eq('user_id',currentUser.id);
+      if(error){wlToast('Error updating.');return;}
+      if(item) item.status=status;
       updateStats();
-      const ribbon = document.querySelector(`[data-ribbon="${rowId}"]`);
-      if (ribbon) { ribbon.className = `card-status status-${status}`; ribbon.textContent = status; }
-      showToast(`Status → ${status}`);
+      const pill=document.getElementById('pill-'+rowId);
+      if(pill){pill.className=`card-status-pill status-${status}`;pill.textContent=status;}
+      wlToast(`Status → ${status}`);
     }
 
-    // ── ⭐ SAVE STAR RATING TO SUPABASE ──
-    async function saveRating(rowId, stars) {
-      const { error } = await sb
-        .from('watchlist')
-        .update({ rating: String(stars) })
-        .eq('id', rowId)
-        .eq('user_id', currentUser.id);
-
-      if (error) { showToast('Error saving rating.'); return; }
-
-      const item = allItems.find(i => i.id === rowId);
-      if (item) item.rating = String(stars);
-
-      // update stars in card without full re-render
-      const container = document.getElementById('stars-' + rowId);
-      if (container) {
-        container.querySelectorAll('.star').forEach(s => {
-          s.classList.toggle('filled', parseInt(s.dataset.val) <= stars);
-        });
-        const label = container.querySelector('.star-label');
-        if (label) label.textContent = stars + '/5';
-      }
-
-      showToast(`Rated ${stars} ★`);
+    async function saveScore(rowId,value){
+      const score=parseFloat(value);
+      if(isNaN(score)||score<0||score>10){wlToast('Score must be 0–10');return;}
+      const{error}=await sb.from('watchlist').update({user_rating:score}).eq('id',rowId).eq('user_id',currentUser.id);
+      if(error){wlToast('Error saving score.');return;}
+      const item=allItems.find(i=>i.id===rowId);if(item) item.user_rating=score;
+      wlToast(`Score saved: ${score}`);
     }
 
-    // ── REMOVE ──
-    async function removeItem(rowId) {
-      const { error } = await sb
-        .from('watchlist')
-        .delete()
-        .eq('id', rowId)
-        .eq('user_id', currentUser.id);
-
-      if (error) { showToast('Error removing item.'); return; }
-      allItems = allItems.filter(i => i.id !== rowId);
-      render();
-      showToast('Removed from watchlist');
+    async function saveEpisode(rowId,value,maxEp){
+      let ep=parseInt(value);
+      if(isNaN(ep)||ep<0) return;
+      if(maxEp && ep>maxEp){ ep=maxEp; document.getElementById('ep-input-'+rowId).value=maxEp; wlToast(`Max episodes: ${maxEp}`); }
+      const{error}=await sb.from('watchlist').update({episode_progress:ep}).eq('id',rowId).eq('user_id',currentUser.id);
+      if(error){wlToast('Error saving progress.');return;}
+      const item=allItems.find(i=>i.id===rowId);if(item) item.episode_progress=ep;
     }
 
-    // ── FILTER & SORT ──
-    function setFilter(f, btn) {
-      currentFilter = f;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      render();
+    async function removeItem(rowId){
+      if(!confirm('Remove from watchlist?')) return;
+      const{error}=await sb.from('watchlist').delete().eq('id',rowId).eq('user_id',currentUser.id);
+      if(error){wlToast('Error removing.');return;}
+      allItems=allItems.filter(i=>i.id!==rowId);render();wlToast('Removed from watchlist');
     }
 
-    function setSortAndRender(v) { currentSort = v; render(); }
-
-    function sortList(list) {
-      if (currentSort === 'oldest')    return [...list].sort((a,b) => new Date(a.added_at) - new Date(b.added_at));
-      if (currentSort === 'my_rating') return [...list].sort((a,b) => (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0));
-      if (currentSort === 'title')     return [...list].sort((a,b) => (a.title||'').localeCompare(b.title||''));
-      return [...list].sort((a,b) => new Date(b.added_at) - new Date(a.added_at));
+    function setFilter(f,btn){
+      currentFilter=f;
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');render();
     }
 
-    // ── STATS ──
-    function updateStats() {
-      document.getElementById('totalCount').textContent     = allItems.length;
-      document.getElementById('watchingCount').textContent  = allItems.filter(i => i.status==='watching').length;
-      document.getElementById('completedCount').textContent = allItems.filter(i => i.status==='completed').length;
-      document.getElementById('planningCount').textContent  = allItems.filter(i => i.status==='planning').length;
-      document.getElementById('droppedCount').textContent   = allItems.filter(i => i.status==='dropped').length;
+    function sortList(list){
+      if(currentSort==='oldest') return [...list].sort((a,b)=>new Date(a.added_at)-new Date(b.added_at));
+      if(currentSort==='score')  return [...list].sort((a,b)=>(b.user_rating||0)-(a.user_rating||0));
+      if(currentSort==='title')  return [...list].sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+      return [...list].sort((a,b)=>new Date(b.added_at)-new Date(a.added_at));
     }
 
-    function resetStats() {
-      ['totalCount','watchingCount','completedCount','planningCount','droppedCount']
-        .forEach(id => document.getElementById(id).textContent = '0');
+    function updateStats(){
+      document.getElementById('totalCount').textContent=allItems.length;
+      document.getElementById('watchingCount').textContent=allItems.filter(i=>i.status==='watching').length;
+      document.getElementById('completedCount').textContent=allItems.filter(i=>i.status==='completed').length;
+      document.getElementById('planningCount').textContent=allItems.filter(i=>i.status==='planning').length;
+      document.getElementById('droppedCount').textContent=allItems.filter(i=>i.status==='dropped').length;
+      document.getElementById('pausedCount').textContent=allItems.filter(i=>i.status==='paused'||i.status==='rewatching').length;
     }
+    function resetStats(){['totalCount','watchingCount','completedCount','planningCount','droppedCount','pausedCount'].forEach(id=>document.getElementById(id).textContent='0');}
 
-    // ── ⭐ BUILD STAR HTML ──
-    function buildStars(rowId, currentRating) {
-      const filled = parseFloat(currentRating) || 0;
-      let html = `<div class="star-rating" id="stars-${rowId}">`;
-      for (let i = 1; i <= 5; i++) {
-        html += `<span
-          class="star ${i <= filled ? 'filled' : ''}"
-          data-val="${i}"
-          onmouseenter="hoverStars(${rowId}, ${i})"
-          onmouseleave="unhoverStars(${rowId}, ${filled})"
-          onclick="saveRating(${rowId}, ${i})"
-        >★</span>`;
-      }
-      html += `<span class="star-label">${filled > 0 ? filled + '/5' : 'Rate it'}</span>`;
-      html += `</div>`;
-      return html;
-    }
-
-    // ── ⭐ HOVER EFFECTS ──
-    function hoverStars(rowId, val) {
-      const c = document.getElementById('stars-' + rowId);
-      if (!c) return;
-      c.querySelectorAll('.star').forEach(s => {
-        const sv = parseInt(s.dataset.val);
-        s.classList.toggle('hovered', sv <= val);
-        if (sv <= val) s.classList.remove('filled');
-      });
-    }
-
-    function unhoverStars(rowId, filled) {
-      const c = document.getElementById('stars-' + rowId);
-      if (!c) return;
-      c.querySelectorAll('.star').forEach(s => {
-        s.classList.remove('hovered');
-        s.classList.toggle('filled', parseInt(s.dataset.val) <= filled);
-      });
-    }
-
-    // ── RENDER ──
-    function render() {
+    function render(){
       updateStats();
-      let list = allItems;
-      if (currentFilter !== 'all') list = list.filter(i => i.status === currentFilter);
-      list = sortList(list);
-
-      const grid  = document.getElementById('watchlistGrid');
-      const empty = document.getElementById('emptyState');
-
-      if (!list.length) { empty.style.display = 'block'; grid.innerHTML = ''; return; }
-      empty.style.display = 'none';
-
-      grid.innerHTML = list.map(item => {
-        const status = item.status || 'planning';
-        const poster = item.poster
-          ? `<img src="${IMG_URL}${item.poster}" alt="${item.title}" loading="lazy"/>`
-          : `<div class="no-img">🎬</div>`;
-
+      let list=allItems;
+      if(currentFilter!=='all') list=list.filter(i=>i.status===currentFilter);
+      list=sortList(list);
+      const grid=document.getElementById('watchlistGrid');
+      const empty=document.getElementById('emptyState');
+      if(!list.length){empty.style.display='block';grid.innerHTML='';return;}
+      empty.style.display='none';
+      grid.innerHTML=list.map(item=>{
+        const status=item.status||'planning';
+        const isTV=item.type==='tv';
+        const maxEp=epCountCache[item.movie_id]||null;
+        // auto-fill ep for completed shows on render
+        const epVal = (isTV && status==='completed' && maxEp && !item.episode_progress)
+          ? maxEp : (item.episode_progress||'');
+        const poster=item.poster
+          ?`<img src="${IMG_URL}${item.poster}" alt="${item.title}" loading="lazy"/>`
+          :`<div class="no-img">🎬</div>`;
+        const wlItem={id:item.movie_id,title:item.title,year:item.year,tmdbRating:item.rating,type:item.type,poster:item.poster};
+        const regId=wlRegister(wlItem);
         return `
           <div class="card">
-            <div class="card-poster">
+            <div class="card-poster" onclick="wlOpenMedia('${item.type}',${item.movie_id},'${regId}')">
               ${poster}
-              <div class="card-badge">${item.type === 'tv' ? 'TV' : 'Movie'}</div>
-              <div class="card-status status-${status}" data-ribbon="${item.id}">${status}</div>
+              <div class="card-badge">${isTV?'TV':'Movie'}</div>
+              ${item.rating?`<div class="card-tmdb">★ ${parseFloat(item.rating).toFixed(1)}</div>`:''}
+              <div class="card-status-pill status-${status}" id="pill-${item.id}">${status}</div>
             </div>
             <div class="card-info">
               <div class="card-title">${item.title}</div>
-              <div class="card-meta">${item.year || ''}</div>
-              ${buildStars(item.id, item.rating)}
-              <select class="status-select" onchange="updateStatus(${item.id}, this.value)">
-                <option value="planning"  ${status==='planning'  ?'selected':''}>Planning</option>
-                <option value="watching"  ${status==='watching'  ?'selected':''}>Watching</option>
-                <option value="completed" ${status==='completed' ?'selected':''}>Completed</option>
-                <option value="dropped"   ${status==='dropped'   ?'selected':''}>Dropped</option>
+              <div class="card-meta">${item.year||''}</div>
+              <div class="score-row">
+                <input class="score-input" type="number" min="0" max="10" step="0.5"
+                  placeholder="—" value="${item.user_rating||''}"
+                  onchange="saveScore(${item.id},this.value)" title="Your score (0-10)"/>
+                <span class="score-label">/ 10</span>
+              </div>
+              ${isTV?`<div class="ep-row">
+                <span class="ep-label">Ep</span>
+                <input class="ep-input" id="ep-input-${item.id}" type="number" min="0"
+                  ${maxEp?`max="${maxEp}"`:''}
+                  placeholder="0" value="${epVal}"
+                  onchange="saveEpisode(${item.id},this.value,${maxEp||'null'})"
+                  title="Episode progress"/>
+                <span class="ep-max">${maxEp?`/ ${maxEp}`:''}</span>
+              </div>`:''}
+              <div class="card-member-rating" id="wl-avg-${item.movie_id}" style="font-size:11px;color:var(--accent2);margin-bottom:6px;display:none;"></div>
+              <select class="status-select" onchange="updateStatus(${item.id},this.value)">
+                <option value="watching"   ${status==='watching'  ?'selected':''}>▶ Watching</option>
+                <option value="completed"  ${status==='completed' ?'selected':''}>✓ Completed</option>
+                <option value="planning"   ${status==='planning'  ?'selected':''}>🕐 Planning</option>
+                <option value="rewatching" ${status==='rewatching'?'selected':''}>🔁 Rewatching</option>
+                <option value="paused"     ${status==='paused'    ?'selected':''}>⏸ Paused</option>
+                <option value="dropped"    ${status==='dropped'   ?'selected':''}>✕ Dropped</option>
               </select>
               <div class="card-actions">
                 <button class="card-btn danger" onclick="removeItem(${item.id})">Remove</button>
@@ -667,15 +335,27 @@
             </div>
           </div>`;
       }).join('');
+
+      // load member avg ratings in background
+      loadMemberRatings(list);
     }
 
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2500);
+    async function loadMemberRatings(items) {
+      const ids = items.map(i => i.movie_id);
+      try {
+        const { data } = await sb.from('watchlist').select('movie_id,user_rating').in('movie_id', ids).not('user_rating','is',null);
+        if (!data?.length) return;
+        const map = {};
+        data.forEach(r => { if(!map[r.movie_id]) map[r.movie_id]=[]; map[r.movie_id].push(r.user_rating); });
+        Object.entries(map).forEach(([id, ratings]) => {
+          const avg = (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(1);
+          const el  = document.getElementById('wl-avg-'+id);
+          if (el) { el.textContent=`👥 ${avg}/10 (${ratings.length} member${ratings.length>1?'s':''})`; el.style.display='block'; }
+        });
+      } catch(e) {}
     }
 
-    restoreSessionFromHash().then(() => initAuth());
+    restoreSessionFromHash().then(()=>initAuth());
   </script>
 </body>
 </html>

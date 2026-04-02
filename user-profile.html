@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WatchFolio — User Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .profile-banner { width:100%;height:200px;background:linear-gradient(135deg,#13131a 0%,#1e1e2e 100%);background-size:cover;background-position:center;position:relative; }
+    .profile-banner::after { content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(10,10,15,0.95) 100%); }
+    .profile-header { max-width:900px;margin:0 auto;padding:0 24px;position:relative; }
+    .profile-top { display:flex;align-items:flex-end;gap:20px;margin-top:-50px;position:relative;z-index:2;padding-bottom:20px;border-bottom:1px solid var(--border); }
+    .profile-avatar { width:100px;height:100px;border-radius:10px;border:3px solid var(--accent);background:var(--surface);background-size:cover;background-position:center;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:white; }
+    .profile-identity { flex:1; }
+    .profile-username { font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;line-height:1;margin-bottom:6px; }
+    .profile-bio { font-size:13px;color:var(--muted);line-height:1.6;max-width:500px; }
+    .profile-follow-row { display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap; }
+    .follow-stat { font-size:13px;color:var(--muted);cursor:pointer;transition:color 0.2s; }
+    .follow-stat:hover { color:var(--accent); }
+    .follow-stat strong { color:var(--text);font-weight:600; }
+    .btn-follow { background:var(--accent);border:none;color:white;padding:8px 22px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:opacity 0.2s; }
+    .btn-follow:hover { opacity:0.85; }
+    .btn-follow.following { background:none;border:1px solid var(--border);color:var(--muted); }
+    .profile-content { max-width:900px;margin:0 auto;padding:28px 24px; }
+    .stats-row { display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:28px; }
+    .stat-card { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center; }
+    .stat-card-number { font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--accent);letter-spacing:1px;line-height:1; }
+    .stat-card-label { font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:4px; }
+    .section-label { font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;margin-bottom:14px; }
+    .favs-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-bottom:24px; }
+    .fav-card { background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative;aspect-ratio:2/3; }
+    .fav-card img { width:100%;height:100%;object-fit:cover;display:block; }
+    .fav-card-title { position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.9),transparent);padding:16px 6px 6px;font-size:10px;font-weight:500;line-height:1.3; }
+    .empty-favs { color:var(--muted);font-size:13px;padding:20px 0; }
+    .wl-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px; }
+    .wl-card { background:var(--card-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden; }
+    .wl-poster { width:100%;aspect-ratio:2/3;background:var(--surface);position:relative;overflow:hidden; }
+    .wl-poster img { width:100%;height:100%;object-fit:cover;display:block; }
+    .wl-status { position:absolute;top:5px;left:5px;font-size:9px;font-weight:600;padding:2px 6px;border-radius:3px;text-transform:uppercase; }
+    .status-watching{background:#2563eb;color:white}.status-completed{background:#16a34a;color:white}.status-planning{background:#6b7280;color:white}.status-rewatching{background:#7c3aed;color:white}.status-paused{background:#d97706;color:white}.status-dropped{background:#dc2626;color:white}
+    .wl-info { padding:8px; }
+    .wl-title { font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px; }
+    .wl-rating { font-size:10px;color:var(--accent2); }
+    .profile-tabs { max-width:900px;margin:0 auto;padding:0 24px;display:flex;border-bottom:1px solid var(--border); }
+    .tab-btn { background:none;border:none;color:var(--muted);padding:12px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;margin-bottom:-1px; }
+    .tab-btn.active { color:var(--text);border-bottom-color:var(--accent); }
+    /* follow list modal */
+    .modal-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);z-index:1000;overflow-y:auto; }
+    .modal-overlay.open { display:block; }
+    .modal-box { max-width:420px;margin:60px auto;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden; }
+    .modal-header { display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border); }
+    .modal-title { font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px; }
+    .modal-close { background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer; }
+    .follow-list { max-height:400px;overflow-y:auto; }
+    .follow-item { display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.2s; }
+    .follow-item:hover { background:rgba(255,255,255,0.03); }
+    .follow-item:last-child { border-bottom:none; }
+    .follow-item-avatar { width:40px;height:40px;border-radius:50%;background:var(--accent);background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;color:white;flex-shrink:0; }
+    .follow-item-name { font-weight:600;font-size:14px; }
+    .follow-item-bio { font-size:12px;color:var(--muted); }
+    .hidden { display:none!important; }
+    @media(max-width:768px) {
+      .profile-top { flex-direction:column;align-items:flex-start;margin-top:-40px; }
+      .profile-avatar { width:80px;height:80px;font-size:2rem; }
+      .stats-row { grid-template-columns:repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="home.html" class="logo">Watch<span>Folio</span></a>
+    <ul class="nav-links">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="index.html">Search</a></li>
+      <li><a href="watchlist.html">Watchlist</a></li>
+      <li><a href="profile.html">Profile</a></li>
+    </ul>
+    <div class="nav-right" id="navRight">
+      <button class="btn-login" onclick="location.href='login.html'">Log in</button>
+      <button class="btn-signup" onclick="location.href='signup.html'">Sign up</button>
+    </div>
+  </nav>
+
+  <div id="profileWrap">
+    <div class="profile-banner" id="profileBanner"></div>
+    <div class="profile-header">
+      <div class="profile-top">
+        <div class="profile-avatar" id="profileAvatar"></div>
+        <div class="profile-identity">
+          <div class="profile-username" id="profileUsername">Loading...</div>
+          <div class="profile-bio" id="profileBio"></div>
+          <div class="profile-follow-row">
+            <span class="follow-stat" onclick="openFollowList('followers')"><strong id="followersCount">0</strong> Followers</span>
+            <span class="follow-stat" onclick="openFollowList('following')"><strong id="followingCount">0</strong> Following</span>
+            <button class="btn-follow hidden" id="followBtn" onclick="toggleFollow()">Follow</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-tabs">
+      <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
+      <button class="tab-btn" onclick="switchTab('watchlist',this)">Watchlist</button>
+    </div>
+
+    <div class="profile-content">
+      <div id="tab-overview">
+        <div class="stats-row" id="statsRow"></div>
+        <div class="section-label">Favourite Movies</div>
+        <div class="favs-grid" id="favMovies"></div>
+        <div class="section-label">Favourite Series</div>
+        <div class="favs-grid" id="favSeries"></div>
+      </div>
+      <div id="tab-watchlist" class="hidden">
+        <div class="wl-grid" id="wlGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOLLOW LIST MODAL -->
+  <div class="modal-overlay" id="followModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="followModalTitle">Followers</div>
+        <button class="modal-close" onclick="closeFollowModal()">✕</button>
+      </div>
+      <div class="follow-list" id="followList"></div>
+    </div>
+  </div>
+
+  <footer>Built by <span>Conqueror</span> & <span>Zoro</span> · Powered by TMDB</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="wl.js"></script>
+  <script>
+    const IMG = 'https://image.tmdb.org/t/p/w300';
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileUserId = urlParams.get('id');
+
+    let currentUser = null;
+    let viewedProfile = null;
+    let isFollowing = false;
+
+    async function init() {
+      currentUser = await wlInit();
+      updateNav();
+      if (!profileUserId) { location.href = 'profile.html'; return; }
+      if (currentUser && currentUser.id === profileUserId) { location.href = 'profile.html'; return; }
+      await Promise.all([loadProfile(), loadFollowCounts()]);
+      if (currentUser) await checkFollowing();
+    }
+
+    function updateNav() {
+      const nr = document.getElementById('navRight');
+      if (!nr || !currentUser) return;
+      const init = (currentUser.email||'?').charAt(0).toUpperCase();
+      nr.innerHTML = `<div style="display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;">${init}</div><button class="btn-login" onclick="handleLogout()">Log Out</button></div>`;
+    }
+
+    async function handleLogout() { await _wlDb.auth.signOut(); location.href = 'home.html'; }
+
+    async function loadProfile() {
+      const { data, error } = await _wlDb.from('profiles').select('*').eq('id', profileUserId).single();
+      if (error || !data) { document.getElementById('profileUsername').textContent = 'User not found'; return; }
+      viewedProfile = data;
+
+      const banner = document.getElementById('profileBanner');
+      const avatar = document.getElementById('profileAvatar');
+      if (data.banner_url) banner.style.backgroundImage = `url(${data.banner_url})`;
+      if (data.avatar_url) {
+        avatar.style.backgroundImage = `url(${data.avatar_url})`;
+        avatar.style.backgroundSize = 'cover';
+        avatar.style.backgroundPosition = 'center';
+        avatar.textContent = '';
+      } else {
+        avatar.textContent = (data.username||'?').charAt(0).toUpperCase();
+      }
+      document.getElementById('profileUsername').textContent = data.username || 'Unknown';
+      document.getElementById('profileBio').textContent = data.bio || '';
+
+      if (currentUser) document.getElementById('followBtn').classList.remove('hidden');
+
+      // stats
+      const { data: wl } = await _wlDb.from('watchlist').select('*').eq('user_id', profileUserId);
+      const watchlist = wl || [];
+      const movies = watchlist.filter(i=>i.type==='movie');
+      const series = watchlist.filter(i=>i.type==='tv');
+      const compM  = movies.filter(i=>i.status==='completed');
+      const compS  = series.filter(i=>i.status==='completed');
+      const mins   = compM.length*100 + series.reduce((a,s)=>a+((s.episode_progress||0)*24),0);
+      document.getElementById('statsRow').innerHTML = [
+        { num: movies.length,        label: 'Movies' },
+        { num: compM.length,         label: 'Completed' },
+        { num: series.length,        label: 'Series' },
+        { num: compS.length,         label: 'Completed' },
+        { num: `${Math.floor(mins/1440)}d`, label: 'Days Watched' },
+      ].map(s=>`<div class="stat-card"><div class="stat-card-number">${s.num}</div><div class="stat-card-label">${s.label}</div></div>`).join('');
+
+      // favs
+      renderFavs('favMovies', data.fav_movies||[]);
+      renderFavs('favSeries', data.fav_series||[]);
+
+      // watchlist tab
+      document.getElementById('wlGrid').innerHTML = watchlist.slice(0,20).map(item=>{
+        const poster = item.poster?`<img src="${IMG}${item.poster}" alt="${item.title}" loading="lazy"/>`:
+          `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--border)">🎬</div>`;
+        return `<div class="wl-card"><div class="wl-poster">${poster}<span class="wl-status status-${item.status}">${item.status}</span></div><div class="wl-info"><div class="wl-title">${item.title}</div><div class="wl-rating">${item.user_rating?`★ ${item.user_rating}`:''}</div></div></div>`;
+      }).join('');
+    }
+
+    function renderFavs(gridId, favs) {
+      const grid = document.getElementById(gridId);
+      if (!favs.length) { grid.innerHTML = `<div class="empty-favs">No favourites yet</div>`; return; }
+      grid.innerHTML = favs.map(f=>`<div class="fav-card"><img src="${f.poster}" alt="${f.title}" onerror="this.style.display='none'"/><div class="fav-card-title">${f.title}</div></div>`).join('');
+    }
+
+    async function loadFollowCounts() {
+      const [{ count: f1 }, { count: f2 }] = await Promise.all([
+        _wlDb.from('follows').select('*',{count:'exact',head:true}).eq('following_id', profileUserId),
+        _wlDb.from('follows').select('*',{count:'exact',head:true}).eq('follower_id', profileUserId),
+      ]);
+      document.getElementById('followersCount').textContent = f1||0;
+      document.getElementById('followingCount').textContent = f2||0;
+    }
+
+    async function checkFollowing() {
+      const { data } = await _wlDb.from('follows').select('id').eq('follower_id', currentUser.id).eq('following_id', profileUserId).single();
+      isFollowing = !!data;
+      const btn = document.getElementById('followBtn');
+      btn.textContent = isFollowing ? 'Following' : 'Follow';
+      if (isFollowing) btn.classList.add('following'); else btn.classList.remove('following');
+    }
+
+    async function toggleFollow() {
+      if (!currentUser) { wlToast('Log in to follow!'); return; }
+      if (isFollowing) {
+        await _wlDb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', profileUserId);
+        isFollowing = false;
+      } else {
+        await _wlDb.from('follows').insert({ follower_id: currentUser.id, following_id: profileUserId });
+        isFollowing = true;
+      }
+      const btn = document.getElementById('followBtn');
+      btn.textContent = isFollowing ? 'Following' : 'Follow';
+      if (isFollowing) btn.classList.add('following'); else btn.classList.remove('following');
+      await loadFollowCounts();
+    }
+
+    async function openFollowList(type) {
+      document.getElementById('followModalTitle').textContent = type === 'followers' ? 'Followers' : 'Following';
+      document.getElementById('followModal').classList.add('open');
+      document.getElementById('followList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">Loading...</div>';
+
+      let userIds = [];
+      if (type === 'followers') {
+        const { data } = await _wlDb.from('follows').select('follower_id').eq('following_id', profileUserId);
+        userIds = (data||[]).map(r=>r.follower_id);
+      } else {
+        const { data } = await _wlDb.from('follows').select('following_id').eq('follower_id', profileUserId);
+        userIds = (data||[]).map(r=>r.following_id);
+      }
+
+      if (!userIds.length) { document.getElementById('followList').innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">No one here yet</div>'; return; }
+
+      const { data: profiles } = await _wlDb.from('profiles').select('id,username,avatar_url,bio').in('id', userIds);
+      document.getElementById('followList').innerHTML = (profiles||[]).map(p => {
+        const initial = (p.username||'?').charAt(0).toUpperCase();
+        const avatarStyle = p.avatar_url ? `background-image:url(${p.avatar_url});background-size:cover;background-position:center;` : 'background:#e63946;';
+        const avatarContent = p.avatar_url ? '' : initial;
+        return `<div class="follow-item" onclick="location.href='user-profile.html?id=${p.id}'">
+          <div class="follow-item-avatar" style="${avatarStyle}">${avatarContent}</div>
+          <div><div class="follow-item-name">${p.username||'Unknown'}</div><div class="follow-item-bio">${p.bio?p.bio.slice(0,40):'WatchFolio member'}</div></div>
+        </div>`;
+      }).join('');
+    }
+
+    function closeFollowModal() { document.getElementById('followModal').classList.remove('open'); }
+    document.getElementById('followModal').addEventListener('click', function(e) { if (e.target===this) closeFollowModal(); });
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      ['overview','watchlist'].forEach(t=>document.getElementById(`tab-${t}`).classList.toggle('hidden',t!==tab));
+    }
+
+    init();
+  </script>
+</body>
+</html>
